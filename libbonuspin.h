@@ -76,5 +76,86 @@ void shiftOutMultiple(int dataPin, int clockPin, decltype(MSBFIRST) order, T val
         shiftOutMultiple(dataPin, clockPin, order, rest...);
     }
 }
+
+/**
+ * Makes working with SN74HC595 chips easier
+ * @tparam latchPin the latch pin index
+ * @tparam clockPin the clock pin index
+ * @tparam dataPin the data pin index
+ */
+template<int latchPin, int clockPin, int dataPin>
+class SN74HC595 {
+    public:
+        static_assert(latchPin != dataPin, "The latch and data pins are defined as the same pins!");
+        static_assert(latchPin != clockPin, "The clock and latch pins are defined as the same pins!!");
+        static_assert(clockPin != dataPin, "The clock and data pins are defined as the same pins!");
+        using Self = SN74HC595<latchPin, clockPin, dataPin>;
+        using LatchHolder = DigitalPinHolder<latchPin, LOW, HIGH>;
+    public:
+        /**
+         * Setup the pins associated with this device
+         */
+        SN74HC595() {
+            pinMode(latchPin, OUTPUT);
+            pinMode(clockPin, OUTPUT);
+            pinMode(dataPin, OUTPUT);
+        }
+
+        ~SN74HC595() = default;
+        constexpr auto getLatchPin() const noexcept { return latchPin; }
+        constexpr auto getClockPin() const noexcept { return clockPin; }
+        constexpr auto getDataPin() const noexcept { return dataPin; }
+        /**
+         * Hold the latch low and shift out a single byte of data!
+         */
+        void shiftOut(byte value) noexcept {
+            LatchHolder latch;
+            ::shiftOut(dataPin, clockPin, MSBFIRST, value);
+        }
+        /**
+         * Hold the latch low and shift out two bytes of data!
+         */
+        void shiftOut(uint16_t value) noexcept {
+            LatchHolder latch;
+            ::shiftOut(dataPin, clockPin, MSBFIRST, value >> 8);
+            ::shiftOut(dataPin, clockPin, MSBFIRST, value);
+        }
+        /**
+         * Hold the latch low and shift 4 bytes of data!
+         */
+        void shiftOut(uint32_t value) noexcept {
+            LatchHolder latch;
+            ::shiftOut(dataPin, clockPin, MSBFirst, value >> 24);
+            ::shiftOut(dataPin, clockPin, MSBFIRST, value >> 16);
+            ::shiftOut(dataPin, clockPin, MSBFIRST, value >> 8);
+            ::shiftOut(dataPin, clockPin, MSBFIRST, value);
+        }
+        /**
+         * Hold the latch low and shift 4 bytes of data!
+         */
+        void shiftOut(uint64_t value) noexcept {
+            LatchHolder latch;
+            ::shiftOut(dataPin, clockPin, MSBFirst, value >> 56);
+            ::shiftOut(dataPin, clockPin, MSBFIRST, value >> 48);
+            ::shiftOut(dataPin, clockPin, MSBFIRST, value >> 40);
+            ::shiftOut(dataPin, clockPin, MSBFIRST, value >> 32);
+            ::shiftOut(dataPin, clockPin, MSBFirst, value >> 24);
+            ::shiftOut(dataPin, clockPin, MSBFIRST, value >> 16);
+            ::shiftOut(dataPin, clockPin, MSBFIRST, value >> 8);
+            ::shiftOut(dataPin, clockPin, MSBFIRST, value);
+        }
+        template<typename T, typename ... Args>
+        void shiftOutMultiple(T current, Args&& ... rest) noexcept {
+            shiftOut(current);
+            if (sizeof...(rest) > 0) {
+                shiftOutMultiple(rest...);
+            }
+        }
+        template<typename T>
+        Self& operator<<(T value) noexcept {
+            shiftOut(value);
+            return *this;
+        }
+};
 } // end bitmanip
 #endif // end LIB_BONUSPIN_H__
