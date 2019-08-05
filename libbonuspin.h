@@ -37,10 +37,10 @@ template<int pin, decltype(LOW) holdPinAs, decltype(HIGH) restorePinTo>
 class DigitalPinHolder final 
 {
     public:
-        inline constexpr DigitalPinHolder() {
+        inline DigitalPinHolder() {
             digitalWrite(pin, holdPinAs);
         }
-        inline constexpr ~DigitalPinHolder() {
+        inline ~DigitalPinHolder() {
             digitalWrite(pin, restorePinTo);
         }
         inline constexpr decltype(pin) getPin() const noexcept { return pin; }
