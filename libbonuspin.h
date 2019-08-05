@@ -128,27 +128,59 @@ class SN74HC595 {
             ::shiftOut(DS, SH_CP, MSBFIRST, value);
         }
         /**
-         * Hold the latch low and shift 4 bytes of data!
+         * Hold the latch low and shift out two bytes of data!
          */
-        void shiftOut(uint32_t value) noexcept {
+        void shiftOut(int16_t value) noexcept {
             LatchHolder latch;
-            ::shiftOut(DS, SH_CP, MSBFIRST, value >> 24);
-            ::shiftOut(DS, SH_CP, MSBFIRST, value >> 16);
-            ::shiftOut(DS, SH_CP, MSBFIRST, value >> 8);
+            ::shiftOut(DS, SH_CP, MSBFIRST, (value >> 8) & 0x00FF);
             ::shiftOut(DS, SH_CP, MSBFIRST, value);
         }
         /**
          * Hold the latch low and shift 4 bytes of data!
          */
+        void shiftOut(uint32_t value) noexcept {
+            LatchHolder latch;
+            ::shiftOut(DS, SH_CP, MSBFIRST, (value >> 24) & 0xFF);
+            ::shiftOut(DS, SH_CP, MSBFIRST, (value >> 16) & 0xFF);
+            ::shiftOut(DS, SH_CP, MSBFIRST, (value >> 8) & 0xFF);
+            ::shiftOut(DS, SH_CP, MSBFIRST, value & 0xFF);
+        }
+        /**
+         * Hold the latch low and shift 4 bytes of data!
+         */
+        void shiftOut(int32_t value) noexcept {
+            LatchHolder latch;
+            ::shiftOut(DS, SH_CP, MSBFIRST, (value >> 24) & 0xFF);
+            ::shiftOut(DS, SH_CP, MSBFIRST, (value >> 16) & 0xFF);
+            ::shiftOut(DS, SH_CP, MSBFIRST, (value >> 8) & 0xFF);
+            ::shiftOut(DS, SH_CP, MSBFIRST, value & 0xFF);
+        }
+        /**
+         * Hold the latch low and shift 8 bytes of data!
+         */
         void shiftOut(uint64_t value) noexcept {
             LatchHolder latch;
-            ::shiftOut(DS, SH_CP, MSBFIRST, value >> 56);
-            ::shiftOut(DS, SH_CP, MSBFIRST, value >> 48);
-            ::shiftOut(DS, SH_CP, MSBFIRST, value >> 40);
-            ::shiftOut(DS, SH_CP, MSBFIRST, value >> 32);
-            ::shiftOut(DS, SH_CP, MSBFIRST, value >> 24);
-            ::shiftOut(DS, SH_CP, MSBFIRST, value >> 16);
-            ::shiftOut(DS, SH_CP, MSBFIRST, value >> 8);
+            ::shiftOut(DS, SH_CP, MSBFIRST, (value >> 56) & 0xFF);
+            ::shiftOut(DS, SH_CP, MSBFIRST, (value >> 48) & 0xFF);
+            ::shiftOut(DS, SH_CP, MSBFIRST, (value >> 40) & 0xFF);
+            ::shiftOut(DS, SH_CP, MSBFIRST, (value >> 32) & 0xFF);
+            ::shiftOut(DS, SH_CP, MSBFIRST, (value >> 24) & 0xFF);
+            ::shiftOut(DS, SH_CP, MSBFIRST, (value >> 16) & 0xFF);
+            ::shiftOut(DS, SH_CP, MSBFIRST, (value >> 8) & 0xFF);
+            ::shiftOut(DS, SH_CP, MSBFIRST, value);
+        }
+        /**
+         * Hold the latch low and shift 8 bytes of data!
+         */
+        void shiftOut(int64_t value) noexcept {
+            LatchHolder latch;
+            ::shiftOut(DS, SH_CP, MSBFIRST, (value >> 56) & 0xFF);
+            ::shiftOut(DS, SH_CP, MSBFIRST, (value >> 48) & 0xFF);
+            ::shiftOut(DS, SH_CP, MSBFIRST, (value >> 40) & 0xFF);
+            ::shiftOut(DS, SH_CP, MSBFIRST, (value >> 32) & 0xFF);
+            ::shiftOut(DS, SH_CP, MSBFIRST, (value >> 24) & 0xFF);
+            ::shiftOut(DS, SH_CP, MSBFIRST, (value >> 16) & 0xFF);
+            ::shiftOut(DS, SH_CP, MSBFIRST, (value >> 8) & 0xFF);
             ::shiftOut(DS, SH_CP, MSBFIRST, value);
         }
         template<typename T, typename ... Args>
