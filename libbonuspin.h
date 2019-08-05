@@ -79,70 +79,77 @@ void shiftOutMultiple(int dataPin, int clockPin, decltype(MSBFIRST) order, T val
 
 /**
  * Makes working with SN74HC595 chips easier
- * @tparam latchPin the latch pin index
- * @tparam clockPin the clock pin index
- * @tparam dataPin the data pin index
+ * @tparam ST_CP the pin connected to ST_CP of 74HC595
+ * @tparam SH_CP the pin connected to SH_CP of 74HC595
+ * @tparam DS the pin connected to DS of 74HC595
  */
-template<int latchPin, int clockPin, int dataPin>
+template<int ST_CP, int SH_CP, int DS>
 class SN74HC595 {
     public:
-        static_assert(latchPin != dataPin, "The latch and data pins are defined as the same pins!");
-        static_assert(latchPin != clockPin, "The clock and latch pins are defined as the same pins!!");
-        static_assert(clockPin != dataPin, "The clock and data pins are defined as the same pins!");
-        using Self = SN74HC595<latchPin, clockPin, dataPin>;
-        using LatchHolder = DigitalPinHolder<latchPin, LOW, HIGH>;
+        static_assert(ST_CP != DS, "The latch and data pins are defined as the same pins!");
+        static_assert(ST_CP != SH_CP, "The clock and latch pins are defined as the same pins!!");
+        static_assert(SH_CP != DS, "The clock and data pins are defined as the same pins!");
+        using Self = SN74HC595<ST_CP, SH_CP, DS>;
+        using LatchHolder = DigitalPinHolder<ST_CP, LOW, HIGH>;
     public:
         /**
          * Setup the pins associated with this device
          */
         SN74HC595() {
-            pinMode(latchPin, OUTPUT);
-            pinMode(clockPin, OUTPUT);
-            pinMode(dataPin, OUTPUT);
+            setupPins();
         }
 
         ~SN74HC595() = default;
-        constexpr auto getLatchPin() const noexcept { return latchPin; }
-        constexpr auto getClockPin() const noexcept { return clockPin; }
-        constexpr auto getDataPin() const noexcept { return dataPin; }
+        constexpr decltype(ST_CP) getLatchPin() const noexcept { return ST_CP; }
+        constexpr decltype(SH_CP) getClockPin() const noexcept { return SH_CP; }
+        constexpr decltype(DS) getDataPin() const noexcept { return DS; }
+        /**
+         * Provided in case pins get reset in between init and the setup
+         * function
+         */
+        void setupPins() {
+            pinMode(ST_CP, OUTPUT);
+            pinMode(SH_CP, OUTPUT);
+            pinMode(DS, OUTPUT);
+        }
         /**
          * Hold the latch low and shift out a single byte of data!
          */
         void shiftOut(byte value) noexcept {
             LatchHolder latch;
-            ::shiftOut(dataPin, clockPin, MSBFIRST, value);
+            ::shiftOut(DS, SH_CP, MSBFIRST, value);
         }
         /**
          * Hold the latch low and shift out two bytes of data!
          */
         void shiftOut(uint16_t value) noexcept {
             LatchHolder latch;
-            ::shiftOut(dataPin, clockPin, MSBFIRST, value >> 8);
-            ::shiftOut(dataPin, clockPin, MSBFIRST, value);
+            ::shiftOut(DS, SH_CP, MSBFIRST, value >> 8);
+            ::shiftOut(DS, SH_CP, MSBFIRST, value);
         }
         /**
          * Hold the latch low and shift 4 bytes of data!
          */
         void shiftOut(uint32_t value) noexcept {
             LatchHolder latch;
-            ::shiftOut(dataPin, clockPin, MSBFirst, value >> 24);
-            ::shiftOut(dataPin, clockPin, MSBFIRST, value >> 16);
-            ::shiftOut(dataPin, clockPin, MSBFIRST, value >> 8);
-            ::shiftOut(dataPin, clockPin, MSBFIRST, value);
+            ::shiftOut(DS, SH_CP, MSBFIRST, value >> 24);
+            ::shiftOut(DS, SH_CP, MSBFIRST, value >> 16);
+            ::shiftOut(DS, SH_CP, MSBFIRST, value >> 8);
+            ::shiftOut(DS, SH_CP, MSBFIRST, value);
         }
         /**
          * Hold the latch low and shift 4 bytes of data!
          */
         void shiftOut(uint64_t value) noexcept {
             LatchHolder latch;
-            ::shiftOut(dataPin, clockPin, MSBFirst, value >> 56);
-            ::shiftOut(dataPin, clockPin, MSBFIRST, value >> 48);
-            ::shiftOut(dataPin, clockPin, MSBFIRST, value >> 40);
-            ::shiftOut(dataPin, clockPin, MSBFIRST, value >> 32);
-            ::shiftOut(dataPin, clockPin, MSBFirst, value >> 24);
-            ::shiftOut(dataPin, clockPin, MSBFIRST, value >> 16);
-            ::shiftOut(dataPin, clockPin, MSBFIRST, value >> 8);
-            ::shiftOut(dataPin, clockPin, MSBFIRST, value);
+            ::shiftOut(DS, SH_CP, MSBFIRST, value >> 56);
+            ::shiftOut(DS, SH_CP, MSBFIRST, value >> 48);
+            ::shiftOut(DS, SH_CP, MSBFIRST, value >> 40);
+            ::shiftOut(DS, SH_CP, MSBFIRST, value >> 32);
+            ::shiftOut(DS, SH_CP, MSBFIRST, value >> 24);
+            ::shiftOut(DS, SH_CP, MSBFIRST, value >> 16);
+            ::shiftOut(DS, SH_CP, MSBFIRST, value >> 8);
+            ::shiftOut(DS, SH_CP, MSBFIRST, value);
         }
         template<typename T, typename ... Args>
         void shiftOutMultiple(T current, Args&& ... rest) noexcept {
