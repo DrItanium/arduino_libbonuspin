@@ -127,6 +127,12 @@ class SN74HC595 {
             ::shiftOut(DS, SH_CP, MSBFIRST, value >> 8);
             ::shiftOut(DS, SH_CP, MSBFIRST, value);
         }
+        void shiftOut(uint8_t lower, uint8_t upper) noexcept {
+            LatchHolder latch;
+            ::shiftOut(DS, SH_CP, MSBFIRST, upper);
+            ::shiftOut(DS, SH_CP, MSBFIRST, lower);
+
+        }
         /**
          * Hold the latch low and shift out two bytes of data!
          */
@@ -196,5 +202,74 @@ class SN74HC595 {
             return *this;
         }
 };
+// Le sigh... I want C++17 features...
+namespace keyestudio {
+namespace multipurpose_shield {
+namespace v2 {
+    constexpr int LED4_ST_CP = 4;
+    constexpr int LED4_SH_CP = 5;
+    constexpr int LED4_DS = 2;
+    /**
+     * LED Segment displays
+     */
+    static constexpr byte LED4_FIELDS[4] = {
+        0x01,
+        0x02,
+        0x04,
+        0x08,
+    };
+    static constexpr byte LED4_BASE16_SEGMENTS[16] = {
+        0xC0, 0xF9, 0xA4, 0xB0,
+        0x99, 0x92, 0x82, 0xF8, 
+        0x80, 0x90, 0x88, 0x83,
+        0xC6, 0xA1, 0x86, 0x8E,
+    };
+/**
+ * Makes working with SN74HC595 chips that interface with the keyestudio
+ * multipurpose shield v2's 4 digit led display much much easier!
+ */
+class FourDigitLEDDisplay : private SN74HC595<LED4_ST_CP,LED4_SH_CP,LED4_DS> {
+    private:
+        using Parent = SN74HC595<LED4_ST_CP,LED4_SH_CP,LED4_DS>;
+    private:
+        void emitToDisplay(byte value, byte digit) {
+            shiftOut(LED4_FIELDS[digit], LED4_BASE16_SEGMENTS[value]);
+        }
+        void emitToDisplay(byte highest, byte higher, byte lower, byte lowest) noexcept {
+            emitToDisplay(highest, 0);
+            emitToDisplay(higher, 1);
+            emitToDisplay(lower, 2);
+            emitToDisplay(lowest, 3);
+        }
+    public:
+        FourDigitLEDDisplay() : Parent() { }
+        ~FourDigitLEDDisplay() = default;
+        inline void printOut(uint16_t val) {
+            auto lowestQuarter = 0x000F & val;
+            auto lowerQuarter = 0x000F & (val >> 4);
+            auto higherQuarter = 0x000F & (val >> 8);
+            auto highestQuarter = 0x000F & (val >> 12);
+            emitToDisplay(highestQuarter, higherQuarter, lowerQuarter, lowestQuarter);
+        }
+        inline void printOut(int16_t val) {
+            auto lowestQuarter = 0x000F & val;
+            auto lowerQuarter = 0x000F & (val >> 4);
+            auto higherQuarter = 0x000F & (val >> 8);
+            auto highestQuarter = 0x000F & (val >> 12);
+            emitToDisplay(highestQuarter, higherQuarter, lowerQuarter, lowestQuarter);
+        }
+
+        inline FourDigitLEDDisplay& operator<<(uint16_t value) noexcept {
+            printOut(value);
+            return *this;
+        }
+        inline FourDigitLEDDisplay& operator<<(int16_t value) noexcept {
+            printOut(value);
+            return *this;
+        }
+};
+} // end namespace v2
+} // end namespace multipurpose_shield
+} // end namespace keyestudio
 } // end bitmanip
 #endif // end LIB_BONUSPIN_H__
