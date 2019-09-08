@@ -206,6 +206,22 @@ class SN74HC595 {
 namespace keyestudio {
 namespace multipurpose_shield {
 namespace v2 {
+    enum class leds : int {
+        D1 = 13,
+        D2 = 12,
+        D3 = 11,
+        D4 = 10,
+        D5 = 9,
+        D6 = 8,
+    };
+    inline void setupLedArray() noexcept {
+        pinMode(static_cast<int>(leds::D1), OUTPUT);
+        pinMode(static_cast<int>(leds::D2), OUTPUT);
+        pinMode(static_cast<int>(leds::D3), OUTPUT);
+        pinMode(static_cast<int>(leds::D4), OUTPUT);
+        pinMode(static_cast<int>(leds::D5), OUTPUT);
+        pinMode(static_cast<int>(leds::D6), OUTPUT);
+    }
     constexpr int LED4_ST_CP = 4;
     constexpr int LED4_SH_CP = 5;
     constexpr int LED4_DS = 2;
