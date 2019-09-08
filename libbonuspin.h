@@ -206,6 +206,11 @@ class SN74HC595 {
 namespace keyestudio {
 namespace multipurpose_shield {
 namespace v2 {
+    constexpr auto Button1 = A1;
+    constexpr auto Button2 = A2;
+    constexpr auto Button3 = A3;
+    constexpr auto Potentiometer = A0;
+    constexpr auto PassiveBuzzer = 3;
     enum class leds : int {
         D1 = 13,
         D2 = 12,
@@ -292,7 +297,7 @@ class FourDigitLEDDisplay : private SN74HC595<LED4_ST_CP,LED4_SH_CP,LED4_DS> {
 inline void digitalWrite(bonuspin::keyestudio::multipurpose_shield::v2::leds l, decltype(HIGH) value) {
     digitalWrite(static_cast<int>(l), value);
 }
-inline void pinMode(bonuspin::keyestudio::multipurpose_shield::v2::leds l, decltype(OUT) kind) noexcept {
+inline void pinMode(bonuspin::keyestudio::multipurpose_shield::v2::leds l, decltype(OUTPUT) kind) noexcept {
     pinMode(static_cast<int>(l), kind);
 }
 #endif // end LIB_BONUSPIN_H__
