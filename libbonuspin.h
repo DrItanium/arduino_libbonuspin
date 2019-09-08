@@ -287,5 +287,12 @@ class FourDigitLEDDisplay : private SN74HC595<LED4_ST_CP,LED4_SH_CP,LED4_DS> {
 } // end namespace v2
 } // end namespace multipurpose_shield
 } // end namespace keyestudio
-} // end bitmanip
+} // end bonuspin
+
+inline void digitalWrite(bonuspin::keyestudio::multipurpose_shield::v2::leds l, decltype(HIGH) value) {
+    digitalWrite(static_cast<int>(l), value);
+}
+inline void pinMode(bonuspin::keyestudio::multipurpose_shield::v2::leds l, decltype(OUT) kind) noexcept {
+    pinMode(static_cast<int>(l), kind);
+}
 #endif // end LIB_BONUSPIN_H__
