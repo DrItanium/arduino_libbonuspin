@@ -211,9 +211,16 @@ class SN74HC595 {
 template<int selA, int selB, int selC, int enablePin>
 class HC138 {
     public:
+        static_assert(selA != selB, "SelA and SelB are the same!");
+        static_assert(selA != selC, "SelA and SelC are the same!");
+        static_assert(selA != enablePin, "SelA and enablePin are the same!");
+        static_assert(selB != selC, "SelB and SelC are the same!");
+        static_assert(selB != enablePin, "SelB and enablePin are the same!");
+        static_assert(selC != enablePin, "SelC and enablePin are the same!");
         using DigitalPinSignal = decltype(HIGH);
         using TemporaryDisabler = HoldPinLow<enablePin>;
         using TemporaryEnabler = HoldPinHigh<enablePin>;
+        using Self = HC138<selA, selB, selC, enablePin>;
     public:
         HC138() {
             setupPins();
@@ -244,6 +251,42 @@ class HC138 {
             digitalWrite(selB, b);
             digitalWrite(selC, c);
         }
+        template<byte signal>
+        void enableLine() {
+            switch (signal) {
+                case 0:
+                    generateSignal<LOW, LOW, LOW>();
+                    break;
+                case 1:
+                    generateSignal<HIGH, LOW, LOW>();
+                    break;
+                case 2:
+                    generateSignal<LOW, HIGH, LOW>();
+                    break;
+                case 3:
+                    generateSignal<HIGH, HIGH, LOW>();
+                    break;
+                case 4:
+                    generateSignal<LOW, LOW, HIGH>();
+                    break;
+                case 5: 
+                    generateSignal<HIGH, LOW, HIGH>();
+                    break;
+                case 6:
+                    generateSignal<LOW, HIGH, HIGH>();
+                    break;
+                case 7:
+                    generateSignal<HIGH, HIGH, HIGH>();
+                    break;
+                default:
+                    enableLine<signal & 0x7>();
+                    break;
+            }
+        }
+        /**
+         * Non compile time deduced version of enableLine.
+         * @param signal the line to enable
+         */
         void enableLine(byte signal) {
             switch (signal) {
                 case 0:
@@ -281,6 +324,64 @@ class HC138 {
         void disableChip() {
             digitalWrite(enablePin, LOW);
         }
+
+
+};
+
+template<int input, int clock, int shld, int enable>
+class HC165 {
+    public:
+        static_assert(input != clock, "input and clock pins are equal");
+        static_assert(input != shld, "input and shld pins are equal");
+        static_assert(input != enable, "input and enable pins are equal");
+        static_assert(clock != shld, "clock and shld pins are the same!");
+        static_assert(clock != enable, "clock and enable pins are the same!");
+        static_assert(shld != enable, "shld and enable pins are the same!");
+        using ChipEnabler = HoldPinHigh<enable>;
+        using ParallelLoadAction = HoldPinLow<shld>;
+        using ClockPulser = HoldPinHigh<enable>;
+        static constexpr auto pulseWidthUSec = 5;
+    public:
+        HC165() {
+            setupPins();
+        }
+        constexpr decltype(input) getInputPin() const noexcept { return input; }
+        constexpr decltype(clock) getClockPin() const noexcept { return clock; }
+        constexpr decltype(shld) getSHLDPin() const noexcept { return shld; }
+        constexpr decltype(enable) getEnablePin() const noexcept { return enable; }
+
+        void setupPins() {
+            pinMode(input, INPUT);
+            pinMode(clock, OUTPUT);
+            pinMode(shld, OUTPUT);
+            pinMode(enable, OUTPUT);
+
+            digitalWrite(clock, LOW);
+            digitalWrite(shld, HIGH);
+        }
+        void parallelLoad() {
+            ChipEnabler activateChip;
+            {
+                ParallelLoadAction pload;
+                delayMicroseconds(pulseWidthUSec);
+            }
+        }
+        void pulseClock() {
+            ClockPulser pulser;
+            delayMicroseconds(pulseWidthUSec);
+        }
+
+        byte shiftIn() noexcept {
+            parallelLoad();
+            auto bytesVal = 0;
+            for (auto i = 0; i < 8; ++i) {
+                /// MSBFIRST
+                bytesVal |= (digitalRead(input) << (7 - i));
+                pulseClock();
+            }
+            return bytesVal;
+        }
+
 };
 
 // Le sigh... I want C++17 features...
