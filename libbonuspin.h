@@ -87,6 +87,7 @@ void shiftOutMultiple(int dataPin, int clockPin, decltype(MSBFIRST) order, T val
  * @tparam ST_CP the pin connected to ST_CP of 74HC595
  * @tparam SH_CP the pin connected to SH_CP of 74HC595
  * @tparam DS the pin connected to DS of 74HC595
+ * @todo add support for the OE line to be controlled if desired
  */
 template<int ST_CP, int SH_CP, int DS>
 class SN74HC595 {
