@@ -52,6 +52,11 @@ class DigitalPinHolder final
         DigitalPinHolder& operator=(DigitalPinHolder&&) = delete;
 };
 
+template<int pin>
+using HoldPinLow = DigitalPinHolder<pin, LOW, HIGH>;
+template<int pin>
+using HoldPinHigh = DigitalPinHolder<pin, HIGH, LOW>;
+
 /**
  * Base case for shiftOutMultiple, is a wrapper around shiftOut.
  * @param dataPin the pin to send data out on
@@ -90,7 +95,7 @@ class SN74HC595 {
         static_assert(ST_CP != SH_CP, "The clock and latch pins are defined as the same pins!!");
         static_assert(SH_CP != DS, "The clock and data pins are defined as the same pins!");
         using Self = SN74HC595<ST_CP, SH_CP, DS>;
-        using LatchHolder = DigitalPinHolder<ST_CP, LOW, HIGH>;
+        using LatchHolder = HoldPinLow<ST_CP>;
     public:
         /**
          * Setup the pins associated with this device
@@ -207,6 +212,8 @@ template<int selA, int selB, int selC, int enablePin>
 class HC138 {
     public:
         using DigitalPinSignal = decltype(HIGH);
+        using TemporaryDisabler = HoldPinLow<enablePin>;
+        using TemporaryEnabler = HoldPinHigh<enablePin>;
     public:
         HC138() {
             setupPins();
@@ -232,12 +239,12 @@ class HC138 {
         void generateSignal() {
             // turn off the chip while we send our signal and then reactivate
             // it once we have the pins setup for the right stuff
-            DigitalPinHolder<EnablePin, LOW, HIGH> enabler;
+            TemporaryDisabler disabler;
             digitalWrite(selA, a);
             digitalWrite(selB, b);
             digitalWrite(selC, c);
         }
-        void enable(byte signal) {
+        void enableLine(byte signal) {
             switch (signal) {
                 case 0:
                     generateSignal<LOW, LOW, LOW>();
@@ -267,6 +274,12 @@ class HC138 {
                     enable(signal & 0x7);
                     break;
             }
+        }
+        void enableChip() {
+            digitalWrite(enablePin, HIGH);
+        }
+        void disableChip() {
+            digitalWrite(enablePin, LOW);
         }
 }
 
