@@ -218,10 +218,10 @@ class HC138 {
         HC138() {
             setupPins();
         }
-        constexpr auto getSelAPin() const noexcept { return selA; }
-        constexpr auto getSelBPin() const noexcept { return selB; }
-        constexpr auto getSelCPin() const noexcept { return selC; }
-        constexpr auto getEnablePin() const noexcept { return enablePin; }
+        constexpr decltype(selA) getSelAPin() const noexcept { return selA; }
+        constexpr decltype(selB) getSelBPin() const noexcept { return selB; }
+        constexpr decltype(selC) getSelCPin() const noexcept { return selC; }
+        constexpr decltype(enablePin) getEnablePin() const noexcept { return enablePin; }
         void setupPins() {
             pinMode(selA, OUTPUT);
             pinMode(selB, OUTPUT);
@@ -235,7 +235,7 @@ class HC138 {
             // time being
 
         }
-        template<DigitalPinSignal a, DigitalPinSignal b, DigitalPinSignal b>
+        template<DigitalPinSignal a, DigitalPinSignal b, DigitalPinSignal c>
         void generateSignal() {
             // turn off the chip while we send our signal and then reactivate
             // it once we have the pins setup for the right stuff
@@ -271,7 +271,7 @@ class HC138 {
                     generateSignal<HIGH, HIGH, HIGH>();
                     break;
                 default:
-                    enable(signal & 0x7);
+                    enableLine(signal & 0x7);
                     break;
             }
         }
@@ -281,7 +281,7 @@ class HC138 {
         void disableChip() {
             digitalWrite(enablePin, LOW);
         }
-}
+};
 
 // Le sigh... I want C++17 features...
 namespace keyestudio {
