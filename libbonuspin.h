@@ -202,6 +202,74 @@ class SN74HC595 {
             return *this;
         }
 };
+
+template<int selA, int selB, int selC, int enablePin>
+class HC138 {
+    public:
+        using DigitalPinSignal = decltype(HIGH);
+    public:
+        HC138() {
+            setupPins();
+        }
+        constexpr auto getSelAPin() const noexcept { return selA; }
+        constexpr auto getSelBPin() const noexcept { return selB; }
+        constexpr auto getSelCPin() const noexcept { return selC; }
+        constexpr auto getEnablePin() const noexcept { return enablePin; }
+        void setupPins() {
+            pinMode(selA, OUTPUT);
+            pinMode(selB, OUTPUT);
+            pinMode(selC, OUTPUT);
+            pinMode(enablePin, OUTPUT);
+
+            digitalWrite(selA, HIGH);
+            digitalWrite(selB, HIGH);
+            digitalWrite(selB, HIGH);
+            digitalWrite(enablePin, LOW); // turn off the connection to the chip for the 
+            // time being
+
+        }
+        template<DigitalPinSignal a, DigitalPinSignal b, DigitalPinSignal b>
+        void generateSignal() {
+            // turn off the chip while we send our signal and then reactivate
+            // it once we have the pins setup for the right stuff
+            DigitalPinHolder<EnablePin, LOW, HIGH> enabler;
+            digitalWrite(selA, a);
+            digitalWrite(selB, b);
+            digitalWrite(selC, c);
+        }
+        void enable(byte signal) {
+            switch (signal) {
+                case 0:
+                    generateSignal<LOW, LOW, LOW>();
+                    break;
+                case 1:
+                    generateSignal<HIGH, LOW, LOW>();
+                    break;
+                case 2:
+                    generateSignal<LOW, HIGH, LOW>();
+                    break;
+                case 3:
+                    generateSignal<HIGH, HIGH, LOW>();
+                    break;
+                case 4:
+                    generateSignal<LOW, LOW, HIGH>();
+                    break;
+                case 5: 
+                    generateSignal<HIGH, LOW, HIGH>();
+                    break;
+                case 6:
+                    generateSignal<LOW, HIGH, HIGH>();
+                    break;
+                case 7:
+                    generateSignal<HIGH, HIGH, HIGH>();
+                    break;
+                default:
+                    enable(signal & 0x7);
+                    break;
+            }
+        }
+}
+
 // Le sigh... I want C++17 features...
 namespace keyestudio {
 namespace multipurpose_shield {
