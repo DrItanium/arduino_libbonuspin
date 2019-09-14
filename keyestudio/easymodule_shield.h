@@ -149,6 +149,9 @@ class V1 {
         inline decltype(analogRead(Potentiometer)) readPot() noexcept {
             return analogRead(Potentiometer);
         }
+        inline int readPot(int mapRangeStart, int mapRangeEnd) noexcept {
+            return map(readPot(), 0, 1023, mapRangeStart, mapRangeEnd);
+        }
         inline int updateDHT11() noexcept {
             return _dht.read(DHT11);
         }
@@ -156,6 +159,19 @@ class V1 {
         int getTemperature() const noexcept { return _dht.temperature; }
         int readLM35() noexcept { return analogRead(LM35); }
         int getLightLevel() noexcept { return analogRead(Photocell); }
+        template<unsigned int numSamples = 16>
+        int getAverageLightLevel() noexcept {
+            static_assert(numSamples > 0, "Can't have zero samples");
+            if (numSamples == 1) {
+                return getLightLevel();
+            } else {
+                int ll = 0;
+                for (int i = 0; i < numSamples; ++i) {
+                    ll += getLightLevel();
+                }
+                return ll / numSamples;
+            }
+        }
         void emitColor(uint32_t c) const noexcept {
             emitColor(((c & 0xFF0000) >> 16),
                     ((c & 0x00FF00) >> 8),
@@ -166,6 +182,8 @@ class V1 {
             analogWrite(LEDGreen, green);
             analogWrite(LEDBlue, blue);
         }
+
+
 
     private:
         dht11 _dht;
