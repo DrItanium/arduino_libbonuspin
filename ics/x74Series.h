@@ -23,7 +23,7 @@
 #ifndef LIB_ICS_X74SERIES_H__
 #define LIB_ICS_X74SERIES_H__
 #include "Arduino.h"
-#include "core/concepts.h"
+#include "../core/concepts.h"
 namespace bonuspin
 {
 /**

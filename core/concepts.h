@@ -20,8 +20,8 @@
  *    misrepresented as being the original software.
  * 3. This notice may not be removed or altered from any source distribution.
  */
-#ifndef LIB_BONUSPIN_H__
-#define LIB_BONUSPIN_H__
+#ifndef LIB_CORE_CONCEPTS_H__
+#define LIB_CORE_CONCEPTS_H__
 #include "Arduino.h"
 namespace bonuspin
 {
@@ -83,4 +83,4 @@ void shiftOutMultiple(int dataPin, int clockPin, decltype(MSBFIRST) order, T val
 }
 
 } // end namespace bonuspin
-#endif // end LIB_BONUSPIN_H__
+#endif // end LIB_CORE_CONCEPTS_H__
