@@ -43,36 +43,51 @@ namespace series_23lcxx {
             EQIO = 0x38,
             RSTIO = 0xFF,
         };
+        static void sendOpcode(Opcodes op) noexcept {
+            SPI.transfer(uint8_t(op));
+        }
+        static void transferAddress(uint32_t address) noexcept {
+            SPI.transfer(static_cast<uint8_t>(address >> 16));
+            SPI.transfer(static_cast<uint8_t>(address >> 8));
+            SPI.transfer(static_cast<uint8_t>(address));
+        }
+        static uint8_t read8(uint32_t address) noexcept {
+            sendOpcode(Opcodes::READ);
+            transferAddress(address, dev);
+            return SPI.transfer(0x00);
+        }
+        static void write8(uint32_t addr, uint8_t value) noexcept {
+            sendOpcode(Opcodes::WRITE);
+            transferAddress(address);
+            SPI.transfer(value);
+        }
     };
 
 
     template<typename T>
     void sendOpcode(typename T::Opcodes opcode, T) noexcept {
-        SPI.transfer(static_cast<uint8_t>(opcode));
+        T::sendOpcode(opcode);
     }
-    void transferAddress(uint32_t address, Device_23LC1024) noexcept {
-        SPI.transfer(static_cast<uint8_t>(address >> 16));
-        SPI.transfer(static_cast<uint8_t>(address >> 8));
-        SPI.transfer(static_cast<uint8_t>(address));
+    template<typename T>
+    void transferAddress(uint32_t address, T) noexcept {
+        T::transferAddress(address);
     }
     /**
      * read a byte from the device, it is assumed that the cs pin is already
      * held low before entering this function.
      */
-    uint8_t read8(uint32_t address, Device_23LC1024 dev) noexcept {
-        sendOpcode(Opcodes_23LC1024::READ);
-        transferAddress(address, dev);
-        return SPI.transfer(0x00);
+    template<typename T>
+    uint8_t read8(uint32_t address, T) noexcept {
+        return T::read8(address);
     }
 
     /**
      * read a byte from the device, it is assumed that the cs pin is already
      * held low!
      */
-    void write8(uint32_t address, uint8_t value, Device_23LC1024 dev) noexcept {
-        sendOpcode(Opcodes_23LC1024::WRITE);
-        transferAddress(address, dev);
-        SPI.transfer(value);
+    template<typename T>
+    void write8(uint32_t address, uint8_t value, T) noexcept {
+        T::write8(address, value);
     }
 
 
