@@ -25,6 +25,7 @@
 #define LIB_BONUSPIN_EASYMODULE_SHIELD_H__
 #include "Arduino.h"
 #include "libbonuspin.h"
+#include <dht11.h>
 
 namespace bonuspin {
 namespace keyestudio {
@@ -114,6 +115,62 @@ class FourDigitLEDDisplay : private SN74HC595<LED4_ST_CP,LED4_SH_CP,LED4_DS> {
         }
 };
 } // end namespace v2
+
+class V1 {
+    public:
+        static constexpr auto SW1 = 2;
+        static constexpr auto SW2 = 3;
+        static constexpr auto LED4 = 12;
+        static constexpr auto LED3 = 13;
+        static constexpr auto LEDRed = 9;
+        static constexpr auto LEDGreen = 10;
+        static constexpr auto LEDBlue = 11;
+        static constexpr auto IRReciever = 6;
+        static constexpr auto PassiveBuzzer = 5;
+        static constexpr auto Photocell = A1;
+        static constexpr auto Potentiometer = A0;
+        static constexpr auto LM35 = A2;
+        static constexpr auto DHT11 = 4;
+
+        inline V1() noexcept {
+            pinMode(LED4, OUTPUT);
+            pinMode(LED3, OUTPUT);
+            pinMode(LEDRed, OUTPUT);
+            pinMode(LEDGreen, OUTPUT);
+            pinMode(LEDBlue, OUTPUT);
+            digitalWrite(LED4, LOW);
+            digitalWrite(LED3, LOW);
+            digitalWrite(LEDRed, LOW);
+            digitalWrite(LEDBlue, LOW);
+            digitalWrite(LEDGreen, LOW);
+        }
+
+
+        inline decltype(analogRead(Potentiometer)) readPot() noexcept {
+            return analogRead(Potentiometer);
+        }
+        inline int updateDHT11() noexcept {
+            return _dht.read(DHT11);
+        }
+        int getHumdity() const noexcept { return _dht.humidity; }
+        int getTemperature() const noexcept { return _dht.temperature; }
+        int readLM35() noexcept { return analogRead(LM35); }
+        int getLightLevel() noexcept { return analogRead(Photocell); }
+        void emitColor(uint32_t c) const noexcept {
+            emitColor(((c & 0xFF0000) >> 16),
+                    ((c & 0x00FF00) >> 8),
+                    lowByte(c));
+        }
+        void emitColor(uint8_t red, uint8_t green, uint8_t blue) const noexcept {
+            analogWrite(LEDRed, red);
+            analogWrite(LEDGreen, green);
+            analogWrite(LEDBlue, blue);
+        }
+
+    private:
+        dht11 _dht;
+};
+
 } // end namespace multipurpose_shield
 } // end namespace keyestudio
 } // end bonuspin
