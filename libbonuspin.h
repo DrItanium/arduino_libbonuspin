@@ -23,6 +23,7 @@
 #ifndef LIB_BONUSPIN_H__
 #define LIB_BONUSPIN_H__
 #include "Arduino.h"
+#include "core/concepts.h"
 namespace bonuspin
 {
 /**
