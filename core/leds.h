@@ -55,15 +55,15 @@ namespace bonuspin
     }
     template<int rPin, int gPin, int bPin>
     void emitColor(uint32_t color, CommonAnodeLED_t) {
-        emitIntensity(rPin, ~redComponent(color), AnalogWrite_t());
-        emitIntensity(gPin, ~greenComponent(color), AnalogWrite_t());
-        emitIntensity(bPin, ~blueComponent(color), AnalogWrite_t());
+        emitIntensity<rPin>( ~redComponent(color), AnalogWrite_t());
+        emitIntensity<gPin>( ~greenComponent(color), AnalogWrite_t());
+        emitIntensity<bPin>( ~blueComponent(color), AnalogWrite_t());
     }
     template<int rPin, int gPin, int bPin>
     void emitColor(uint32_t color, CommonCathodeLED_t) {
-        emitIntensity(rPin, redComponent(color), AnalogWrite_t());
-        emitIntensity(gPin, greenComponent(color), AnalogWrite_t());
-        emitIntensity(bPin, blueComponent(color), AnalogWrite_t());
+        emitIntensity<rPin>( redComponent(color), AnalogWrite_t());
+        emitIntensity<gPin>( greenComponent(color), AnalogWrite_t());
+        emitIntensity<bPin>( blueComponent(color), AnalogWrite_t());
     }
 
 

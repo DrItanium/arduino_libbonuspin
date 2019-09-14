@@ -30,22 +30,25 @@ namespace bonuspin {
 namespace sram {
 namespace microchip {
 namespace series_23lcxx {
-    enum class Opcodes_23LC1024 : uint8_t {
-        RDSR = 0x05,
-        RDMR = RDSR,
-        WRSR = 0x01,
-        WRMR = WRSR,
-        READ = 0x03,
-        WRITE = 0x02,
-        EDIO = 0x3B,
-        EQIO = 0x38,
-        RSTIO = 0xFF,
+
+    struct Device_23LC1024 final { 
+        enum class Opcodes : uint8_t {
+            RDSR = 0x05,
+            RDMR = RDSR,
+            WRSR = 0x01,
+            WRMR = WRSR,
+            READ = 0x03,
+            WRITE = 0x02,
+            EDIO = 0x3B,
+            EQIO = 0x38,
+            RSTIO = 0xFF,
+        };
     };
 
-    class Device_23LC1024 final { };
 
-    void sendOpcode(Opcodes_23LC1024 opcode) noexcept {
-        SPI.transfer(uint8_t(opcode));
+    template<typename T>
+    void sendOpcode(typename T::Opcodes opcode, T) noexcept {
+        SPI.transfer(static_cast<uint8_t>(opcode));
     }
     void transferAddress(uint32_t address, Device_23LC1024) noexcept {
         SPI.transfer(static_cast<uint8_t>(address >> 16));
