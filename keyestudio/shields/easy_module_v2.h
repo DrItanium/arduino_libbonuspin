@@ -109,12 +109,12 @@ namespace bonuspin {
 
 
                     EasyModuleV2() noexcept {
-                        setupLEDPin<LED1>();
-                        setupLEDPin<LED2>();
-                        setupLEDPin<LED3>();
-                        setupLEDPin<LED4>();
-                        setupLEDPin<LED5>();
-                        setupLEDPin<LED6>();
+                        bonuspin::setupDigitalPin<LED1>();
+                        bonuspin::setupDigitalPin<LED2>();
+                        bonuspin::setupDigitalPin<LED3>();
+                        bonuspin::setupDigitalPin<LED4>();
+                        bonuspin::setupDigitalPin<LED5>();
+                        bonuspin::setupDigitalPin<LED6>();
                     }
 
                     void printout(uint16_t val) { _disp.printOut(val); }

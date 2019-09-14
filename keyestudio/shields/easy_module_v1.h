@@ -47,12 +47,13 @@ namespace bonuspin {
                     static constexpr auto LM35 = A2;
                     static constexpr auto DHT11 = 4;
 
-                    inline EasyModuleV1() noexcept {
-                        setupLEDPin<LED4>();
-                        setupLEDPin<LED3>();
-                        setupLEDPin<LEDRed>();
-                        setupLEDPin<LEDGreen>();
-                        setupLEDPin<LEDBlue>();
+                    inline EasyModuleV1() noexcept : _ir(IRReciever) {
+                        bonuspin::setupDigitalPin<LED4>();
+                        bonuspin::setupDigitalPin<LED3>();
+                        bonuspin::setupDigitalPin<LEDRed>();
+                        bonuspin::setupDigitalPin<LEDGreen>();
+                        bonuspin::setupDigitalPin<LEDBlue>();
+                        _ir.enableIRIn();
                     }
 
                     inline int updateDHT11() noexcept {
@@ -86,10 +87,20 @@ namespace bonuspin {
                         analogWrite(LEDBlue, blue);
                     }
 
-
+                    int getIRValue() {
+                        if (_ir.decode(&_results)) {
+                            auto value = _results.value;
+                            _ir.resume();
+                            return value;
+                        } else {
+                            return -1;
+                        }
+                    }
 
                 private:
+                    IRrecv _ir;
                     dht11 _dht;
+                    decode_results _results;
             };
 
         } // end namespace shields
