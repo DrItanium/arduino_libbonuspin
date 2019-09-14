@@ -43,6 +43,7 @@ namespace bonuspin
     void emitIntensity(int value, AnalogWrite_t) {
         analogWrite(pin, value);
     }
+
     constexpr uint8_t redComponent(uint32_t color) noexcept {
         return (color & 0xFF0000) >> 16;
     }
@@ -54,15 +55,15 @@ namespace bonuspin
     }
     template<int rPin, int gPin, int bPin>
     void emitColor(uint32_t color, CommonAnodeLED_t) {
-        emitIntensity(rPin, ~redComponent(color));
-        emitIntensity(gPin, ~greenComponent(color));
-        emitIntensity(bPin, ~blueComponent(color));
+        emitIntensity(rPin, ~redComponent(color), AnalogWrite_t());
+        emitIntensity(gPin, ~greenComponent(color), AnalogWrite_t());
+        emitIntensity(bPin, ~blueComponent(color), AnalogWrite_t());
     }
     template<int rPin, int gPin, int bPin>
     void emitColor(uint32_t color, CommonCathodeLED_t) {
-        emitIntensity(rPin, redComponent(color));
-        emitIntensity(gPin, greenComponent(color));
-        emitIntensity(bPin, blueComponent(color));
+        emitIntensity(rPin, redComponent(color), AnalogWrite_t());
+        emitIntensity(gPin, greenComponent(color), AnalogWrite_t());
+        emitIntensity(bPin, blueComponent(color), AnalogWrite_t());
     }
 
 

@@ -23,5 +23,6 @@
 #ifndef LIB_BONUSPIN_H__
 #define LIB_BONUSPIN_H__
 #include "core/concepts.h"
+#include "core/leds.h"
 #include "ics/x74Series.h"
 #endif // end LIB_BONUSPIN_H__
