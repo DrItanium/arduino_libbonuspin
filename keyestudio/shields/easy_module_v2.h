@@ -25,26 +25,12 @@
 #define LIB_BONUSPIN_EASYMODULE_SHIELD_H__
 #include "Arduino.h"
 #include "libbonuspin.h"
-#include <dht11.h>
-#include <IRremote.h>
 
 namespace bonuspin {
     namespace keyestudio {
-        namespace multipurpose_shield {
-            template<decltype(A0) potPin>
-            struct HasPotentiometer {
-                using PotResult = decltype(analogRead(potPin));
+        namespace shields {
 
-                PotResult readPot() const noexcept { return analogRead(potPin); }
-                PotResult readPot(int mapRangeStart, int mapRangeEnd) const noexcept { return map(readPot(), 0, 1023, mapRangeStart, mapRangeEnd); }
-            };
-            template<int pin, decltype(LOW) startAs = LOW>
-            void setupLEDPin() noexcept {
-                pinMode(pin, OUTPUT);
-                digitalWrite(pin, startAs);
-            }
-
-            class V2 : public HasPotentiometer<A0> {
+            class EasyModuleV2 : public bonuspin::HasPotentiometer<A0> {
                 /**
                  * LED Segment displays
                  */
@@ -122,7 +108,7 @@ namespace bonuspin {
                     static constexpr auto LED6 = 8;
 
 
-                    V2() noexcept {
+                    EasyModuleV2() noexcept {
                         setupLEDPin<LED1>();
                         setupLEDPin<LED2>();
                         setupLEDPin<LED3>();
@@ -133,11 +119,11 @@ namespace bonuspin {
 
                     void printout(uint16_t val) { _disp.printOut(val); }
                     void printout(int16_t val) { _disp.printOut(val); }
-                    V2& operator<<(uint16_t val) { 
+                    EasyModuleV2& operator<<(uint16_t val) { 
                         printout(val);
                         return *this;
                     }
-                    V2& operator<<(int16_t val) {
+                    EasyModuleV2& operator<<(int16_t val) {
                         printout(val);
                         return *this;
                     }
@@ -158,68 +144,7 @@ namespace bonuspin {
 
             };
 
-            class V1 : public HasPotentiometer<A0> {
-                public:
-                    static constexpr auto SW1 = 2;
-                    static constexpr auto SW2 = 3;
-                    static constexpr auto LED4 = 12;
-                    static constexpr auto LED3 = 13;
-                    static constexpr auto LEDRed = 9;
-                    static constexpr auto LEDGreen = 10;
-                    static constexpr auto LEDBlue = 11;
-                    static constexpr auto IRReciever = 6;
-                    static constexpr auto PassiveBuzzer = 5;
-                    static constexpr auto Photocell = A1;
-                    static constexpr auto Potentiometer = A0;
-                    static constexpr auto LM35 = A2;
-                    static constexpr auto DHT11 = 4;
-
-                    inline V1() noexcept {
-                        setupLEDPin<LED4>();
-                        setupLEDPin<LED3>();
-                        setupLEDPin<LEDRed>();
-                        setupLEDPin<LEDGreen>();
-                        setupLEDPin<LEDBlue>();
-                    }
-
-                    inline int updateDHT11() noexcept {
-                        return _dht.read(DHT11);
-                    }
-                    int getHumdity() const noexcept { return _dht.humidity; }
-                    int getTemperature() const noexcept { return _dht.temperature; }
-                    int readLM35() noexcept { return analogRead(LM35); }
-                    int getLightLevel() noexcept { return analogRead(Photocell); }
-                    template<unsigned int numSamples = 16>
-                        int getAverageLightLevel() noexcept {
-                            static_assert(numSamples > 0, "Can't have zero samples");
-                            if (numSamples == 1) {
-                                return getLightLevel();
-                            } else {
-                                int ll = 0;
-                                for (int i = 0; i < numSamples; ++i) {
-                                    ll += getLightLevel();
-                                }
-                                return ll / numSamples;
-                            }
-                        }
-                    void emitColor(uint32_t c) const noexcept {
-                        emitColor(((c & 0xFF0000) >> 16),
-                                ((c & 0x00FF00) >> 8),
-                                lowByte(c));
-                    }
-                    void emitColor(uint8_t red, uint8_t green, uint8_t blue) const noexcept {
-                        analogWrite(LEDRed, red);
-                        analogWrite(LEDGreen, green);
-                        analogWrite(LEDBlue, blue);
-                    }
-
-
-
-                private:
-                    dht11 _dht;
-            };
-
-        } // end namespace multipurpose_shield
+        } // end namespace shields 
     } // end namespace keyestudio
 } // end bonuspin
 
