@@ -384,5 +384,5 @@ class HC165 {
         }
 
 };
-
+} // end namespace bonuspin
 #endif // end LIB_BONUSPIN_H__

@@ -1,6 +1,7 @@
 /**
  * @file 
- * Additional classes and functions that make working with pins easier
+ * Classes to make working with the keyestudio v1 and v2 easy module shields
+ * easier.
  * @copyright
  * Copyright (c) 2019 Joshua Scoggins 
  * 
@@ -25,7 +26,7 @@
 #include "Arduino.h"
 #include "libbonuspin.h"
 
-// Le sigh... I want C++17 features...
+namespace bonuspin {
 namespace keyestudio {
 namespace multipurpose_shield {
 namespace v2 {
