@@ -26,6 +26,7 @@
 #include "Arduino.h"
 #include "libbonuspin.h"
 #include <dht11.h>
+#include <IRremote.h>
 
 namespace bonuspin {
     namespace keyestudio {
@@ -37,13 +38,13 @@ namespace bonuspin {
                 PotResult readPot() const noexcept { return analogRead(potPin); }
                 PotResult readPot(int mapRangeStart, int mapRangeEnd) const noexcept { return map(readPot(), 0, 1023, mapRangeStart, mapRangeEnd); }
             };
+            template<int pin, decltype(LOW) startAs = LOW>
+            void setupLEDPin() noexcept {
+                pinMode(pin, OUTPUT);
+                digitalWrite(pin, startAs);
+            }
 
             class V2 : public HasPotentiometer<A0> {
-                template<int pin, decltype(LOW) startAs = LOW>
-                void setupLEDPin() const noexcept {
-                    pinMode(pin, OUTPUT);
-                    digitalWrite(pin, startAs);
-                }
                 /**
                  * LED Segment displays
                  */
@@ -174,16 +175,11 @@ namespace bonuspin {
                     static constexpr auto DHT11 = 4;
 
                     inline V1() noexcept {
-                        pinMode(LED4, OUTPUT);
-                        pinMode(LED3, OUTPUT);
-                        pinMode(LEDRed, OUTPUT);
-                        pinMode(LEDGreen, OUTPUT);
-                        pinMode(LEDBlue, OUTPUT);
-                        digitalWrite(LED4, LOW);
-                        digitalWrite(LED3, LOW);
-                        digitalWrite(LEDRed, LOW);
-                        digitalWrite(LEDBlue, LOW);
-                        digitalWrite(LEDGreen, LOW);
+                        setupLEDPin<LED4>();
+                        setupLEDPin<LED3>();
+                        setupLEDPin<LEDRed>();
+                        setupLEDPin<LEDGreen>();
+                        setupLEDPin<LEDBlue>();
                     }
 
                     inline int updateDHT11() noexcept {
