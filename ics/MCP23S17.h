@@ -215,6 +215,12 @@ class MCP23S17 {
                 setIOCon(getIOCon() & 0b1111'0110);
             }
         }
+        void interruptPinsAreMirrored() noexcept {
+            setIOCon(getIOCon() | 0b0100'0000);
+        }
+        void interruptPinsAreIndependent() noexcept {
+            setIOCon(getIOCon() & 0b1011'1110);
+        }
     private:
         bool _registersAreSequential = true;
         bool _polarityIsActiveLow = true;
