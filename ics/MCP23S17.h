@@ -57,7 +57,13 @@ class MCP23S17 {
         static constexpr auto ResetPin = reset;
         static constexpr auto HasResetPin = (ResetPin >= 0);
         constexpr auto getChipEnablePin() const noexcept { return ChipEnablePin; }
-        constexpr auto getSPIAddress() const noexcept { return BusAddress; }
+        constexpr auto getSPIAddress() const noexcept { 
+            if (_hardwareAddressPinsEnabled) {
+                return BusAddress; 
+            } else {
+                return 0b000;
+            }
+        }
         constexpr auto getResetPin() const noexcept { return ResetPin; }
         constexpr auto hasResetPin() const noexcept { return ResetPin >= 0; }
     public:
@@ -70,7 +76,8 @@ class MCP23S17 {
                 digitalWrite(ResetPin, HIGH);
             }
             // on startup registers are sequential, you must actually change
-            // the iocon register
+            // the iocon register. Polarity is also active low for interrupt
+            // lines
         }
     private:
         class ReadOperation final { };
@@ -109,6 +116,10 @@ class MCP23S17 {
     public:
         constexpr bool registersAreInSeparateBanks() const noexcept { return !_registersAreSequential; }
         constexpr bool registersAreSequential() const noexcept { return _registersAreSequential; }
+        constexpr bool interruptPinsAreActiveLow() const noexcept { return _polarityIsActiveLow; }
+        constexpr bool interruptPinsAreActiveHigh() const noexcept { return !_polarityIsActiveLow; }
+        constexpr bool hardwareAddressEnabled() const noexcept { return _hardwareAddressPinsEnabled; }
+        constexpr bool hardwareAddressDisabled() const noexcept { return !_hardwareAddressPinsEnabled; }
         constexpr auto getIODIRAAddress()   const noexcept { return 0x00; }
         constexpr auto getIODIRBAddress()   const noexcept { return chooseAddress<0x01, 0x10>(); }
         constexpr auto getIOPOLAAddress()   const noexcept { return chooseAddress<0x02, 0x01>(); }
@@ -134,6 +145,8 @@ class MCP23S17 {
         void setIOCon(byte value) noexcept {
             write(getIOConAddress(), value);
             _registersAreSequential = ((value & 0b1000'0000) == 0);
+            _polarityIsActiveLow = ((value & 0b0000'0010) == 0);
+            _hardwareAddressPinsEnabled = ((value & 0b0000'1000) != 0);
         }
         void makeRegistersSequential() noexcept {
             if (!_registersAreSequential) {
@@ -143,6 +156,16 @@ class MCP23S17 {
         void makeRegistersBanked() noexcept {
             if (_registersAreSequential) {
                 setIOCon(getIOCon() | 0b1000'0000);
+            }
+        }
+        void makeInterruptOutputLinesActiveLow() noexcept {
+            if (!_polarityIsActiveLow) {
+                setIOCon(getIOCon() & 0b0111'1100);
+            }
+        }
+        void makeInterruptOutputLinesActiveHigh() noexcept {
+            if (_polarityIsActiveLow) {
+                setIOCon(getIOCon() | 0b0000'0010);
             }
         }
         void reset() noexcept {
@@ -159,15 +182,43 @@ class MCP23S17 {
         }
         uint16_t readGPIOs() noexcept { return read16(getGPIOAAddress(), getGPIOBAddress()); }
         void writeGPIOs(uint16_t pattern) noexcept { write16(getGPIOAAddress(), getGPIOBAddress(), pattern); }
+
         uint16_t readGPIOsDirection() noexcept { return read16(getIODIRAAddress(), getIODIRBAddress()); }
         void writeGPIOsDirection(uint16_t pattern) noexcept { write16(getIODIRAAddress(), getIODIRBAddress(), pattern); }
+
         uint16_t readGPIOPolarity() noexcept { return read16(getIOPOLAAddress(), getIOPOLBAddress()); }
         void writeGPIOPolarity(uint16_t pattern) noexcept { write16(getIOPOLAAddress(), getIOPOLBAddress(), pattern); }
+
         uint16_t readGPIOInterruptEnable() noexcept { return read16(getGPINTENAAddress(), getGPINTENBAddress()); }
         void writeGPIOInterruptEnable(uint16_t pattern) noexcept { write16(getGPINTENAAddress(), getGPINTENBAddress(), pattern); }
 
+        uint16_t readDefaultCompareRegisterForInterruptOnChange() noexcept { return read16(getDEFVALAAddress(), getDEFVALBAddress()); }
+        void writeDefaultCompareRegisterForInterruptOnChange(uint16_t pattern) noexcept { write16(getDEFVALAAddress(), getDEFVALBAddress(), pattern); }
+
+        uint16_t readInterruptOnChangeControlRegister() noexcept { return read16(getIntConAAddress(), getIntConBAddress()); }
+        void writeInterruptOnChangeControlRegister(uint16_t pattern) noexcept { write16(getIntConAAddress(), getIntConBAddress(), pattern); }
+
+        uint16_t readGPIOPullup() noexcept { return read16(getGPPUAAddress(), getGPPUBAddress()); }
+        void writeGPIOPullup(uint16_t pattern) noexcept { write16(getGPPUAAddress(), getGPPUBAddress(), pattern); }
+        uint16_t readGPIOInterruptFlags() noexcept { return read16(getINTFAAddress(), getINTFBAddress()); }
+        uint16_t readGPIOInterruptCapturedRegister() noexcept { return read16(getINTCAPAAddress(), getINTCAPBAddress()); }
+        uint16_t readOutputLatch() noexcept { return read16(getOLATAAddress(), getOLATBAddress()); }
+        void writeOutputLatch(uint16_t pattern) noexcept { return write16(getOLATAAddress(), getOLATBAddress(), pattern); }
+
+        void enableHardwareAddressPins() noexcept {
+            if (!_hardwareAddressPinsEnabled) {
+                setIOCon(getIOCon() | 0b0000'1000);
+            }
+        }
+        void disableHardwareAddressPins() noexcept {
+            if (_hardwareAddressPinsEnabled) {
+                setIOCon(getIOCon() & 0b1111'0110);
+            }
+        }
     private:
         bool _registersAreSequential = true;
+        bool _polarityIsActiveLow = true;
+        bool _hardwareAddressPinsEnabled = false;
 };
 
 
