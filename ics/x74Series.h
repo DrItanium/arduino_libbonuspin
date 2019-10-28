@@ -50,9 +50,9 @@ class HC595 {
         }
 
         ~HC595() = default;
-        constexpr decltype(ST_CP) getLatchPin() const noexcept { return ST_CP; }
-        constexpr decltype(SH_CP) getClockPin() const noexcept { return SH_CP; }
-        constexpr decltype(DS) getDataPin() const noexcept { return DS; }
+        constexpr auto getLatchPin() const noexcept { return ST_CP; }
+        constexpr auto getClockPin() const noexcept { return SH_CP; }
+        constexpr auto getDataPin() const noexcept { return DS; }
         /**
          * Provided in case pins get reset in between init and the setup
          * function
@@ -170,10 +170,10 @@ class HC138 {
         HC138() {
             setupPins();
         }
-        constexpr decltype(selA) getSelAPin() const noexcept { return selA; }
-        constexpr decltype(selB) getSelBPin() const noexcept { return selB; }
-        constexpr decltype(selC) getSelCPin() const noexcept { return selC; }
-        constexpr decltype(enablePin) getEnablePin() const noexcept { return enablePin; }
+        constexpr auto getSelAPin() const noexcept { return selA; }
+        constexpr auto getSelBPin() const noexcept { return selB; }
+        constexpr auto getSelCPin() const noexcept { return selC; }
+        constexpr auto getEnablePin() const noexcept { return enablePin; }
         void setupPins() {
             pinMode(selA, OUTPUT);
             pinMode(selB, OUTPUT);
@@ -290,10 +290,10 @@ class HC165 {
         HC165() {
             setupPins();
         }
-        constexpr decltype(input) getInputPin() const noexcept { return input; }
-        constexpr decltype(clock) getClockPin() const noexcept { return clock; }
-        constexpr decltype(shld) getSHLDPin() const noexcept { return shld; }
-        constexpr decltype(enable) getEnablePin() const noexcept { return enable; }
+        constexpr auto getInputPin() const noexcept { return input; }
+        constexpr auto getClockPin() const noexcept { return clock; }
+        constexpr auto getSHLDPin() const noexcept { return shld; }
+        constexpr auto getEnablePin() const noexcept { return enable; }
 
         void setupPins() {
             pinMode(input, INPUT);

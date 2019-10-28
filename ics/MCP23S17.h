@@ -49,6 +49,7 @@ class GenericMCP23S17 {
             return generateByte(false, intPolarity, odr, haen, disslw, seqop, mirror, bank);
         }
     public:
+        using Self = GenericMCP23S17<address, resetPin>;
         static constexpr auto BusAddress = address;
         static constexpr auto ResetPin = resetPin;
         static constexpr auto HasResetPin = (ResetPin >= 0);
@@ -65,7 +66,15 @@ class GenericMCP23S17 {
             // the iocon register. Polarity is also active low for interrupt
             // lines
         }
+        // ugh, arduino doesn't implement delete(void*, unsigned int) so I get
+        // an error because of this line. I'll disable it for now, these
+        // objects should never _ever_ go out of scope
+        // This is very gross as we should have a virtual destructor!
         virtual ~GenericMCP23S17() = default;
+        Self& operator=(const Self&) = delete; 
+        Self& operator=(Self&&) = delete; 
+        GenericMCP23S17(const Self&) = delete;
+        GenericMCP23S17(Self&&) = delete;
         virtual void enableCS() noexcept = 0;
         virtual void disableCS() noexcept = 0;
     private:
@@ -207,15 +216,57 @@ class GenericMCP23S17 {
         void interruptPinsAreIndependent() noexcept {
             setIOCon(getIOCon() & 0b1011'1110);
         }
+        static constexpr uint16_t BitMasks[] = {
+            1,
+            1 << 1,
+            1 << 2,
+            1 << 3,
+            1 << 4,
+            1 << 5,
+            1 << 6,
+            1 << 7,
+            1 << 8,
+            1 << 9,
+            1 << 10,
+            1 << 11,
+            1 << 12,
+            1 << 13,
+            1 << 14,
+            1 << 15,
+        };
+        void digitalWrite(uint8_t pin, uint8_t value) noexcept {
+            if (pin > 15) {
+                return;
+            }
+            uint16_t toWriteBack = readGPIOs();
+            if (auto pinMask = BitMasks[pin]; value == LOW) {
+                toWriteBack &= ~pinMask;
+            } else {
+                toWriteBack |= pinMask;
+            }
+        }
+        int digitalRead(uint8_t pin) {
+            if (pin > 15) {
+                return -1;
+            }  else {
+                return (readGPIOs() & BitMasks[pin]) ? HIGH : LOW;
+            }
+        }
     private:
         bool _registersAreSequential = true;
         bool _polarityIsActiveLow = true;
         bool _hardwareAddressPinsEnabled = false;
 };
 
-template<int chipEnable, byte address, int resetPin = -1>
+template<byte address, int chipEnable, int resetPin = -1>
 class MCP23S17 : public GenericMCP23S17<address, resetPin> {
     public:
+        using Self = MCP23S17<address, chipEnable, resetPin>;
+        Self& operator=(const Self&) = delete; 
+        Self& operator=(Self&&) = delete; 
+        MCP23S17(const Self&) = delete;
+        MCP23S17(Self&&) = delete;
+        static_assert(chipEnable >= 0, "Must bind the chip enable to a real pin!");
         static constexpr auto ChipEnablePin = chipEnable;
         constexpr auto getChipEnablePin() const noexcept { return ChipEnablePin; }
         MCP23S17() {
@@ -223,6 +274,7 @@ class MCP23S17 : public GenericMCP23S17<address, resetPin> {
             digitalWrite(ChipEnablePin, HIGH);
             // we could do if constexpr here T_T if only we have access to c++17 
         }
+        ~MCP23S17() override = default;
         void enableCS() noexcept override {
             digitalWrite(ChipEnablePin, LOW);
         }
@@ -231,6 +283,18 @@ class MCP23S17 : public GenericMCP23S17<address, resetPin> {
         }
 };
 
+template<byte address, int resetPin = -1>
+void digitalWrite(uint8_t pin, uint8_t value, bonuspin::GenericMCP23S17<address, resetPin>& mcp) noexcept {
+    mcp.digitalWrite(pin, value);
+}
+
+template<byte address, int resetPin = -1>
+auto digitalRead(uint8_t pin, bonuspin::GenericMCP23S17<address, resetPin>& mcp) noexcept {
+    return mcp.digitalRead(pin);
+}
+
+
 } // end namespace bonuspin
+
 
 #endif // end LIB_ICS_MCP23S17_H__

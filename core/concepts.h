@@ -23,6 +23,7 @@
 #ifndef LIB_CORE_CONCEPTS_H__
 #define LIB_CORE_CONCEPTS_H__
 #include "Arduino.h"
+void operator delete (void* ptr, unsigned int sz) noexcept;
 namespace bonuspin
 {
 /**
