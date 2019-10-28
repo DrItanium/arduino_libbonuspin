@@ -272,7 +272,6 @@ class MCP23S17 : public GenericMCP23S17<address, resetPin> {
         MCP23S17() {
             pinMode(ChipEnablePin, OUTPUT);
             digitalWrite(ChipEnablePin, HIGH);
-            // we could do if constexpr here T_T if only we have access to c++17 
         }
         ~MCP23S17() override = default;
         void enableCS() noexcept override {
@@ -283,6 +282,10 @@ class MCP23S17 : public GenericMCP23S17<address, resetPin> {
         }
 };
 
+
+
+} // end namespace bonuspin
+
 template<byte address, int resetPin = -1>
 void digitalWrite(uint8_t pin, uint8_t value, bonuspin::GenericMCP23S17<address, resetPin>& mcp) noexcept {
     mcp.digitalWrite(pin, value);
@@ -292,9 +295,5 @@ template<byte address, int resetPin = -1>
 auto digitalRead(uint8_t pin, bonuspin::GenericMCP23S17<address, resetPin>& mcp) noexcept {
     return mcp.digitalRead(pin);
 }
-
-
-} // end namespace bonuspin
-
 
 #endif // end LIB_ICS_MCP23S17_H__
