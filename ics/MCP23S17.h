@@ -113,13 +113,6 @@ class MCP23S17 {
         constexpr byte chooseAddress() const noexcept {
             return registersAreSequential() ? seq : banked;
         }
-    public:
-        constexpr bool registersAreInSeparateBanks() const noexcept { return !_registersAreSequential; }
-        constexpr bool registersAreSequential() const noexcept { return _registersAreSequential; }
-        constexpr bool interruptPinsAreActiveLow() const noexcept { return _polarityIsActiveLow; }
-        constexpr bool interruptPinsAreActiveHigh() const noexcept { return !_polarityIsActiveLow; }
-        constexpr bool hardwareAddressEnabled() const noexcept { return _hardwareAddressPinsEnabled; }
-        constexpr bool hardwareAddressDisabled() const noexcept { return !_hardwareAddressPinsEnabled; }
         constexpr auto getIODIRAAddress()   const noexcept { return 0x00; }
         constexpr auto getIODIRBAddress()   const noexcept { return chooseAddress<0x01, 0x10>(); }
         constexpr auto getIOPOLAAddress()   const noexcept { return chooseAddress<0x02, 0x01>(); }
@@ -141,6 +134,13 @@ class MCP23S17 {
         constexpr auto getGPIOBAddress()    const noexcept { return chooseAddress<0x13, 0x19>(); }
         constexpr auto getOLATAAddress()    const noexcept { return chooseAddress<0x14, 0x0A>(); }
         constexpr auto getOLATBAddress()    const noexcept { return chooseAddress<0x15, 0x1A>(); }
+    public:
+        constexpr bool registersAreInSeparateBanks() const noexcept { return !_registersAreSequential; }
+        constexpr bool registersAreSequential() const noexcept { return _registersAreSequential; }
+        constexpr bool interruptPinsAreActiveLow() const noexcept { return _polarityIsActiveLow; }
+        constexpr bool interruptPinsAreActiveHigh() const noexcept { return !_polarityIsActiveLow; }
+        constexpr bool hardwareAddressEnabled() const noexcept { return _hardwareAddressPinsEnabled; }
+        constexpr bool hardwareAddressDisabled() const noexcept { return !_hardwareAddressPinsEnabled; }
         byte getIOCon() noexcept { return read(getIOConAddress()); }
         void setIOCon(byte value) noexcept {
             write(getIOConAddress(), value);
