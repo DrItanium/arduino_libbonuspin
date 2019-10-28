@@ -1,4 +1,0 @@
-DigitalPinHolder KEYWORD1
-shiftOutMultiple KEYWORD2
-bonuspin::shiftOutMultiple KEYWORD2
-bonuspin::DigitalPinHolder KEYWORD1
