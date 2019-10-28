@@ -64,11 +64,15 @@ class MCP23S17 {
         MCP23S17() {
             pinMode(ChipEnablePin, OUTPUT);
             digitalWrite(ChipEnablePin, HIGH);
-            // we could do if constexpr here T_T if c++17 is default active
+            // we could do if constexpr here T_T if only we have access to c++17 
             if (hasResetPin()) {
-                
+                pinMode(ResetPin, OUTPUT);
+                digitalWrite(ResetPin, HIGH);
             }
+            // on startup registers are sequential, you must actually change
+            // the iocon register
         }
+    private:
         class ReadOperation final { };
         class WriteOperation final { };
         constexpr byte generateOpcode(ReadOperation) const noexcept {
@@ -90,7 +94,80 @@ class MCP23S17 {
             SPI.transfer(static_cast<uint8_t>(registerAddress));
             SPI.transfer(static_cast<uint8_t>(value));
         }
+        void write16(byte registerAddressA, byte registerAddressB, uint16_t value) noexcept {
+            write(registerAddressA, static_cast<byte>(value & 0xFF));
+            write(registerAddressB, static_cast<byte>((value & 0xFF00) >> 8));
+        }
+        uint16_t read16(byte registerAddressA, byte registerAddressB) noexcept {
+            return static_cast<uint16_t>(read(registerAddressA)) |
+                   (static_cast<uint16_t>(read(registerAddressB)) << 8);
+        }
+        template<byte seq, byte banked>
+        constexpr byte chooseAddress() const noexcept {
+            return registersAreSequential() ? seq : banked;
+        }
+    public:
+        constexpr bool registersAreInSeparateBanks() const noexcept { return !_registersAreSequential; }
+        constexpr bool registersAreSequential() const noexcept { return _registersAreSequential; }
+        constexpr auto getIODIRAAddress()   const noexcept { return 0x00; }
+        constexpr auto getIODIRBAddress()   const noexcept { return chooseAddress<0x01, 0x10>(); }
+        constexpr auto getIOPOLAAddress()   const noexcept { return chooseAddress<0x02, 0x01>(); }
+        constexpr auto getIOPOLBAddress()   const noexcept { return chooseAddress<0x03, 0x11>(); }
+        constexpr auto getGPINTENAAddress() const noexcept { return chooseAddress<0x04, 0x02>(); }
+        constexpr auto getGPINTENBAddress() const noexcept { return chooseAddress<0x05, 0x12>(); }
+        constexpr auto getDEFVALAAddress()  const noexcept { return chooseAddress<0x06, 0x03>(); }
+        constexpr auto getDEFVALBAddress()  const noexcept { return chooseAddress<0x07, 0x13>(); }
+        constexpr auto getIntConAAddress()  const noexcept { return chooseAddress<0x08, 0x04>(); }
+        constexpr auto getIntConBAddress()  const noexcept { return chooseAddress<0x09, 0x14>(); }
+        constexpr auto getIOConAddress()    const noexcept { return chooseAddress<0x0A, 0x05>(); }
+        constexpr auto getGPPUAAddress()    const noexcept { return chooseAddress<0x0C, 0x06>(); }
+        constexpr auto getGPPUBAddress()    const noexcept { return chooseAddress<0x0D, 0x16>(); }
+        constexpr auto getINTFAAddress()    const noexcept { return chooseAddress<0x0E, 0x07>(); }
+        constexpr auto getINTFBAddress()    const noexcept { return chooseAddress<0x0F, 0x17>(); }
+        constexpr auto getINTCAPAAddress()  const noexcept { return chooseAddress<0x10, 0x08>(); }
+        constexpr auto getINTCAPBAddress()  const noexcept { return chooseAddress<0x11, 0x18>(); }
+        constexpr auto getGPIOAAddress()    const noexcept { return chooseAddress<0x12, 0x09>(); }
+        constexpr auto getGPIOBAddress()    const noexcept { return chooseAddress<0x13, 0x19>(); }
+        constexpr auto getOLATAAddress()    const noexcept { return chooseAddress<0x14, 0x0A>(); }
+        constexpr auto getOLATBAddress()    const noexcept { return chooseAddress<0x15, 0x1A>(); }
+        byte getIOCon() noexcept { return read(getIOConAddress()); }
+        void setIOCon(byte value) noexcept {
+            write(getIOConAddress(), value);
+            _registersAreSequential = ((value & 0b1000'0000) == 0);
+        }
+        void makeRegistersSequential() noexcept {
+            if (!_registersAreSequential) {
+                setIOCon(getIOCon() & 0b0111'1110);
+            }
+        }
+        void makeRegistersBanked() noexcept {
+            if (_registersAreSequential) {
+                setIOCon(getIOCon() | 0b1000'0000);
+            }
+        }
+        void reset() noexcept {
+            // always delay for 2 microseconds even if reset is not held down
+            // for consistency
+            if (hasResetPin()) {
+                // only do the reset pin if it actually makes sense
+                HoldPinLow<reset> holder;
+                delayMicroseconds(2); // minimum of 1 microsecond to do two to make sure
+            } else {
+                // this is not a DRY violation as the scopes are different
+                delayMicroseconds(2);
+            }
+        }
+        uint16_t readGPIOs() noexcept { return read16(getGPIOAAddress(), getGPIOBAddress()); }
+        void writeGPIOs(uint16_t pattern) noexcept { write16(getGPIOAAddress(), getGPIOBAddress(), pattern); }
+        uint16_t readGPIOsDirection() noexcept { return read16(getIODIRAAddress(), getIODIRBAddress()); }
+        void writeGPIOsDirection(uint16_t pattern) noexcept { write16(getIODIRAAddress(), getIODIRBAddress(), pattern); }
+        uint16_t readGPIOPolarity() noexcept { return read16(getIOPOLAAddress(), getIOPOLBAddress()); }
+        void writeGPIOPolarity(uint16_t pattern) noexcept { write16(getIOPOLAAddress(), getIOPOLBAddress(), pattern); }
+        uint16_t readGPIOInterruptEnable() noexcept { return read16(getGPINTENAAddress(), getGPINTENBAddress()); }
+        void writeGPIOInterruptEnable(uint16_t pattern) noexcept { write16(getGPINTENAAddress(), getGPINTENBAddress(), pattern); }
+
     private:
+        bool _registersAreSequential = true;
 };
 
 
