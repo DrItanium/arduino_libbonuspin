@@ -34,18 +34,23 @@ namespace bonuspin
  * @tparam restorePinTo the value to return the pin to when this object goes out of scope.
  */
 template<int pin, decltype(LOW) holdPinAs, decltype(HIGH) restorePinTo>
-class DigitalPinHolder final 
+class DigitalPinHolder final
 {
     public:
-        inline DigitalPinHolder() {
-            digitalWrite(pin, holdPinAs);
+        DigitalPinHolder() {
+            if (pin >= 0) {
+                digitalWrite(pin, holdPinAs);
+            }
         }
-        inline ~DigitalPinHolder() {
-            digitalWrite(pin, restorePinTo);
+        ~DigitalPinHolder() {
+            if (pin >= 0) {
+                digitalWrite(pin, restorePinTo);
+            }
         }
         inline constexpr decltype(pin) getPin() const noexcept { return pin; }
         inline constexpr decltype(holdPinAs) getHeldPinValue() const noexcept { return holdPinAs; }
         inline constexpr decltype(restorePinTo) getPinValueOnDestruction() const noexcept { return restorePinTo; }
+        inline constexpr auto willNotFire() const noexcept { return pin < 0; }
         DigitalPinHolder(const DigitalPinHolder&) = delete;
         DigitalPinHolder(DigitalPinHolder&&) = delete;
         DigitalPinHolder& operator=(const DigitalPinHolder&) = delete;

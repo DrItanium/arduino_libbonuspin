@@ -22,6 +22,9 @@
  */
 #ifndef LIB_BONUSPIN_H__
 #define LIB_BONUSPIN_H__
+#if __cplusplus < 201703L
+#error "C++17 required!"
+#endif
 #include "core/concepts.h"
 #include "core/leds.h"
 #include "ics/x74Series.h"

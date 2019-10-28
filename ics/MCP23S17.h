@@ -29,7 +29,6 @@
 
 namespace bonuspin 
 {
-
 template<int chipEnable, byte address, int resetPin = -1>
 class MCP23S17 {
     static_assert((address & 0b111) == address, "Provided address is too large!");
@@ -225,7 +224,6 @@ class MCP23S17 {
         bool _polarityIsActiveLow = true;
         bool _hardwareAddressPinsEnabled = false;
 };
-
 
 } // end namespace bonuspin
 
