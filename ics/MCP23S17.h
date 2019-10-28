@@ -25,12 +25,12 @@
 #define LIB_ICS_MCP23S17_H__
 #include "Arduino.h"
 #include "../core/concepts.h"
-#include <spi.h>
+#include <SPI.h>
 
 namespace bonuspin 
 {
 
-template<int chipEnable, byte address, int reset = -1>
+template<int chipEnable, byte address, int resetPin = -1>
 class MCP23S17 {
     static_assert((address & 0b111) == address, "Provided address is too large!");
     private:
@@ -50,11 +50,10 @@ class MCP23S17 {
             return generateByte(false, intPolarity, odr, haen, disslw, seqop, mirror, bank);
         }
     public:
-        using Self = MCP23S17<chipenable, address>;
         using CSEnabler = HoldPinLow<chipEnable>;
         static constexpr auto ChipEnablePin = chipEnable;
         static constexpr auto BusAddress = address;
-        static constexpr auto ResetPin = reset;
+        static constexpr auto ResetPin = resetPin;
         static constexpr auto HasResetPin = (ResetPin >= 0);
         constexpr auto getChipEnablePin() const noexcept { return ChipEnablePin; }
         constexpr auto getSPIAddress() const noexcept { 
