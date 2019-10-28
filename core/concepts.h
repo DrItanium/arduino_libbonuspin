@@ -38,12 +38,12 @@ class DigitalPinHolder final
 {
     public:
         DigitalPinHolder() {
-            if (pin >= 0) {
+            if constexpr (pin >= 0) {
                 digitalWrite(pin, holdPinAs);
             }
         }
         ~DigitalPinHolder() {
-            if (pin >= 0) {
+            if constexpr (pin >= 0) {
                 digitalWrite(pin, restorePinTo);
             }
         }

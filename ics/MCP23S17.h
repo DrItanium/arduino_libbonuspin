@@ -29,8 +29,8 @@
 
 namespace bonuspin 
 {
-template<int chipEnable, byte address, int resetPin = -1>
-class MCP23S17 {
+template<byte address, int resetPin = -1>
+class GenericMCP23S17 {
     static_assert((address & 0b111) == address, "Provided address is too large!");
     private:
         static constexpr auto generateByte(bool a, bool b, bool c, bool d, bool e, bool f, bool g, bool h) noexcept {
@@ -49,27 +49,15 @@ class MCP23S17 {
             return generateByte(false, intPolarity, odr, haen, disslw, seqop, mirror, bank);
         }
     public:
-        using CSEnabler = HoldPinLow<chipEnable>;
-        static constexpr auto ChipEnablePin = chipEnable;
         static constexpr auto BusAddress = address;
         static constexpr auto ResetPin = resetPin;
         static constexpr auto HasResetPin = (ResetPin >= 0);
-        constexpr auto getChipEnablePin() const noexcept { return ChipEnablePin; }
-        constexpr auto getSPIAddress() const noexcept { 
-            if (_hardwareAddressPinsEnabled) {
-                return BusAddress; 
-            } else {
-                return 0b000;
-            }
-        }
+        constexpr auto getSPIAddress() const noexcept { return _hardwareAddressPinsEnabled ? BusAddress : 0b000; }
         constexpr auto getResetPin() const noexcept { return ResetPin; }
         constexpr auto hasResetPin() const noexcept { return ResetPin >= 0; }
     public:
-        MCP23S17() {
-            pinMode(ChipEnablePin, OUTPUT);
-            digitalWrite(ChipEnablePin, HIGH);
-            // we could do if constexpr here T_T if only we have access to c++17 
-            if (hasResetPin()) {
+        GenericMCP23S17() {
+            if constexpr (HasResetPin) {
                 pinMode(ResetPin, OUTPUT);
                 digitalWrite(ResetPin, HIGH);
             }
@@ -77,6 +65,9 @@ class MCP23S17 {
             // the iocon register. Polarity is also active low for interrupt
             // lines
         }
+        virtual ~GenericMCP23S17() = default;
+        virtual void enableCS() noexcept = 0;
+        virtual void disableCS() noexcept = 0;
     private:
         class ReadOperation final { };
         class WriteOperation final { };
@@ -88,16 +79,19 @@ class MCP23S17 {
         }
 
         byte read(byte registerAddress) noexcept {
-            CSEnabler enable;
+            enableCS();
             SPI.transfer(static_cast<uint8_t>(generateOpcode(ReadOperation{})));
             SPI.transfer(static_cast<uint8_t>(registerAddress));
-            return SPI.transfer(0x00);
+            auto result = SPI.transfer(0x00);
+            disableCS();
+            return result;
         }
         void write(byte registerAddress, byte value) noexcept {
-            CSEnabler enable;
+            enableCS();
             SPI.transfer(static_cast<uint8_t>(generateOpcode(WriteOperation{})));
             SPI.transfer(static_cast<uint8_t>(registerAddress));
             SPI.transfer(static_cast<uint8_t>(value));
+            disableCS();
         }
         void write16(byte registerAddressA, byte registerAddressB, uint16_t value) noexcept {
             write(registerAddressA, static_cast<byte>(value & 0xFF));
@@ -167,16 +161,10 @@ class MCP23S17 {
             }
         }
         void reset() noexcept {
-            // always delay for 2 microseconds even if reset is not held down
-            // for consistency
-            if (hasResetPin()) {
-                // only do the reset pin if it actually makes sense
-                HoldPinLow<reset> holder;
-                delayMicroseconds(2); // minimum of 1 microsecond to do two to make sure
-            } else {
-                // this is not a DRY violation as the scopes are different
-                delayMicroseconds(2);
-            }
+            // always delay for 2 microseconds even if reset is not actually
+            // connected to a pin for consistency
+            HoldPinLow<reset> holder;
+            delayMicroseconds(2);
         }
         uint16_t readGPIOs() noexcept { return read16(getGPIOAAddress(), getGPIOBAddress()); }
         void writeGPIOs(uint16_t pattern) noexcept { write16(getGPIOAAddress(), getGPIOBAddress(), pattern); }
@@ -223,6 +211,24 @@ class MCP23S17 {
         bool _registersAreSequential = true;
         bool _polarityIsActiveLow = true;
         bool _hardwareAddressPinsEnabled = false;
+};
+
+template<int chipEnable, byte address, int resetPin = -1>
+class MCP23S17 : public GenericMCP23S17<address, resetPin> {
+    public:
+        static constexpr auto ChipEnablePin = chipEnable;
+        constexpr auto getChipEnablePin() const noexcept { return ChipEnablePin; }
+        MCP23S17() {
+            pinMode(ChipEnablePin, OUTPUT);
+            digitalWrite(ChipEnablePin, HIGH);
+            // we could do if constexpr here T_T if only we have access to c++17 
+        }
+        void enableCS() noexcept override {
+            digitalWrite(ChipEnablePin, LOW);
+        }
+        void disableCS() noexcept override {
+            digitalWrite(ChipEnablePin, HIGH);
+        }
 };
 
 } // end namespace bonuspin
