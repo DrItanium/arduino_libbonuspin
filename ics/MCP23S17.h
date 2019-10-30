@@ -25,7 +25,11 @@
 #define LIB_ICS_MCP23S17_H__
 #include "Arduino.h"
 #include "../core/concepts.h"
+#ifdef ARDUINO_attiny
+#include <tinySPI.h>
+#else
 #include <SPI.h>
+#endif
 
 namespace bonuspin 
 {

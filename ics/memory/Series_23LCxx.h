@@ -24,7 +24,12 @@
 #ifndef LIB_ICS_MEMORY_SERIES_23LCXX_H__
 #define LIB_ICS_MEMORY_SERIES_23LCXX_H__
 #include "Arduino.h"
+#ifdef ARUDINO_attiny
+#include <tinySPI.h>
+#else
 #include <SPI.h>
+#endif
+
 #include "core/concepts.h"
 namespace bonuspin {
 namespace sram {
