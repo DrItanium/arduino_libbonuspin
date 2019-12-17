@@ -153,7 +153,7 @@ class HC595 {
         }
 };
 
-template<int selA, int selB, int selC, int enablePin>
+template<int selA, int selB, int selC, int enablePin = -1>
 class HC138 {
     public:
         static_assert(selA != selB, "SelA and SelB are the same!");

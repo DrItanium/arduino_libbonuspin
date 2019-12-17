@@ -22,8 +22,12 @@
  */
 #include "libbonuspin.h"
 #include "core/concepts.h"
+#ifdef __AVR__
 #include "new.h"
+#endif
 
+#ifdef __AVR__
 void operator delete(void* ptr, unsigned int)  noexcept {
     ::operator delete(ptr);
 }
+#endif
