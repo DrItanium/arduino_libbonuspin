@@ -256,6 +256,19 @@ class GenericMCP23S17 {
                 return (readGPIOs() & BitMasks[pin]) ? HIGH : LOW;
             }
         }
+        void pinMode(uint8_t pin, decltype(INPUT) kind) {
+            auto maskedValue = BitMasks[pin];
+            auto dirmask = readGPIOsDirection();
+            if (kind == INPUT_PULLUP) {
+                auto pullups = readGPIOPullup();
+                writeGPIOPullup(pullups | dirmask);
+                writeGPIOsDirection(maskedValue | dirmask);
+            } else if (kind == INPUT) {
+                writeGPIOsDirection(maskedValue | dirmask);
+            } else {
+                writeGPIOsDirection((~maskedValue) & dirmask);
+            }
+        }
     private:
         bool _registersAreSequential = true;
         bool _polarityIsActiveLow = true;
@@ -299,5 +312,11 @@ template<byte address, int resetPin = -1>
 auto digitalRead(uint8_t pin, bonuspin::GenericMCP23S17<address, resetPin>& mcp) noexcept {
     return mcp.digitalRead(pin);
 }
+
+template<byte address, int resetPin = -1>
+void pinMode(uint8_t pin, decltype(INPUT) kind, bonuspin::GenericMCP23S17<address, resetPin>& mcp) noexcept {
+    mcp.pinMode(pin, kind);
+}
+
 
 #endif // end LIB_ICS_MCP23S17_H__

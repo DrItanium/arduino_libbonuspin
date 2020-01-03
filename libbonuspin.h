@@ -29,4 +29,5 @@
 #include "core/leds.h"
 #include "ics/x74Series.h"
 #include "ics/MCP23S17.h"
+#include "ics/memory/Series_23LCxx.h"
 #endif // end LIB_BONUSPIN_H__

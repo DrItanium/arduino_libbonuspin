@@ -24,7 +24,7 @@
 #ifndef LIB_ICS_MEMORY_SERIES_23LCXX_H__
 #define LIB_ICS_MEMORY_SERIES_23LCXX_H__
 #include "Arduino.h"
-#ifdef ARUDINO_attiny
+#ifdef ARDUINO_attiny
 #include <tinySPI.h>
 #else
 #include <SPI.h>
@@ -58,12 +58,12 @@ namespace series_23lcxx {
         }
         static uint8_t read8(uint32_t address) noexcept {
             sendOpcode(Opcodes::READ);
-            transferAddress(address, dev);
+            transferAddress(address);
             return SPI.transfer(0x00);
         }
         static void write8(uint32_t addr, uint8_t value) noexcept {
             sendOpcode(Opcodes::WRITE);
-            transferAddress(address);
+            transferAddress(addr);
             SPI.transfer(value);
         }
     };
