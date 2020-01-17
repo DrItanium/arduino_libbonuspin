@@ -248,6 +248,7 @@ class GenericMCP23S17 {
             } else {
                 toWriteBack |= pinMask;
             }
+            writeGPIOs(toWriteBack);
         }
         int digitalRead(uint8_t pin) {
             if (pin > 15) {
