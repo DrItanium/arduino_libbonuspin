@@ -24,11 +24,7 @@
 #ifndef LIB_ICS_MEMORY_SERIES_23LCXX_H__
 #define LIB_ICS_MEMORY_SERIES_23LCXX_H__
 #include "Arduino.h"
-#ifdef ARDUINO_attiny
-#include <tinySPI.h>
-#else
 #include <SPI.h>
-#endif
 
 #include "core/concepts.h"
 namespace bonuspin {
@@ -66,6 +62,12 @@ namespace series_23lcxx {
             transferAddress(addr);
             SPI.transfer(value);
         }
+        Device_23LC1024() = delete;
+        ~Device_23LC1024() = delete;
+        Device_23LC1024(const Device_23LC1024&) = delete;
+        Device_23LC1024(Device_23LC1024&&) = delete;
+        Device_23LC1024& operator=(const Device_23LC1024&) = delete;
+        Device_23LC1024& operator=(Device_23LC1024&&) = delete;
     };
 
 
