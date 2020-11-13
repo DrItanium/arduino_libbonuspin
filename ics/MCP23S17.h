@@ -57,15 +57,7 @@ class GenericMCP23S17 {
         constexpr auto getResetPin() const noexcept { return ResetPin; }
         constexpr auto hasResetPin() const noexcept { return ResetPin >= 0; }
     public:
-        GenericMCP23S17() {
-            if constexpr (HasResetPin) {
-                pinMode(ResetPin, OUTPUT);
-                digitalWrite(ResetPin, HIGH);
-            }
-            // on startup registers are sequential, you must actually change
-            // the iocon register. Polarity is also active low for interrupt
-            // lines
-        }
+        GenericMCP23S17() = default;
         // ugh, arduino doesn't implement delete(void*, unsigned int) so I get
         // an error because of this line. I'll disable it for now, these
         // objects should never _ever_ go out of scope
@@ -77,6 +69,15 @@ class GenericMCP23S17 {
         GenericMCP23S17(Self&&) = delete;
         virtual void enableCS() noexcept = 0;
         virtual void disableCS() noexcept = 0;
+        virtual void begin() noexcept {
+            if constexpr (HasResetPin) {
+                pinMode(ResetPin, OUTPUT);
+                digitalWrite(ResetPin, HIGH);
+            }
+            // on startup registers are sequential, you must actually change
+            // the iocon register. Polarity is also active low for interrupt
+            // lines
+        }
     private:
         class ReadOperation final { };
         class WriteOperation final { };
@@ -172,7 +173,7 @@ class GenericMCP23S17 {
         void reset() noexcept {
             // always delay for 2 microseconds even if reset is not actually
             // connected to a pin for consistency
-            HoldPinLow<reset> holder;
+            volatile HoldPinLow<resetPin> holder;
             delayMicroseconds(2);
         }
         uint16_t readGPIOs() noexcept { return read16(getGPIOAAddress(), getGPIOBAddress()); }
@@ -275,6 +276,7 @@ class GenericMCP23S17 {
 template<byte address, int chipEnable, int resetPin = -1>
 class MCP23S17 : public GenericMCP23S17<address, resetPin> {
     public:
+        using Parent = GenericMCP23S17<address, resetPin>;
         using Self = MCP23S17<address, chipEnable, resetPin>;
         Self& operator=(const Self&) = delete; 
         Self& operator=(Self&&) = delete; 
@@ -283,15 +285,17 @@ class MCP23S17 : public GenericMCP23S17<address, resetPin> {
         static_assert(chipEnable >= 0, "Must bind the chip enable to a real pin!");
         static constexpr auto ChipEnablePin = chipEnable;
         constexpr auto getChipEnablePin() const noexcept { return ChipEnablePin; }
-        MCP23S17() {
-            pinMode(ChipEnablePin, OUTPUT);
-            digitalWrite(ChipEnablePin, HIGH);
-        }
+        MCP23S17() = default;
         ~MCP23S17() override = default;
         void enableCS() noexcept override {
             digitalWrite(ChipEnablePin, LOW);
         }
         void disableCS() noexcept override {
+            digitalWrite(ChipEnablePin, HIGH);
+        }
+        void begin() noexcept override {
+            Parent::begin();
+            pinMode(ChipEnablePin, OUTPUT);
             digitalWrite(ChipEnablePin, HIGH);
         }
 };
