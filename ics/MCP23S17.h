@@ -30,7 +30,7 @@
 namespace bonuspin 
 {
 template<byte address, int resetPin = -1>
-class GenericMCP23S17 {
+class MCP23x17 {
     static_assert((address & 0b111) == address, "Provided address is too large!");
     private:
         static constexpr auto generateByte(bool a, bool b, bool c, bool d, bool e, bool f, bool g, bool h) noexcept {
@@ -49,7 +49,7 @@ class GenericMCP23S17 {
             return generateByte(false, intPolarity, odr, haen, disslw, seqop, mirror, bank);
         }
     public:
-        using Self = GenericMCP23S17<address, resetPin>;
+        using Self = MCP23x17<address, resetPin>;
         static constexpr auto BusAddress = address;
         static constexpr auto ResetPin = resetPin;
         static constexpr auto HasResetPin = (ResetPin >= 0);
@@ -57,16 +57,16 @@ class GenericMCP23S17 {
         constexpr auto getResetPin() const noexcept { return ResetPin; }
         constexpr auto hasResetPin() const noexcept { return ResetPin >= 0; }
     public:
-        GenericMCP23S17() = default;
+        MCP23x17() = default;
         // ugh, arduino doesn't implement delete(void*, unsigned int) so I get
         // an error because of this line. I'll disable it for now, these
         // objects should never _ever_ go out of scope
         // This is very gross as we should have a virtual destructor!
-        virtual ~GenericMCP23S17() = default;
+        virtual ~MCP23x17() = default;
         Self& operator=(const Self&) = delete; 
         Self& operator=(Self&&) = delete; 
-        GenericMCP23S17(const Self&) = delete;
-        GenericMCP23S17(Self&&) = delete;
+        MCP23x17(const Self&) = delete;
+        MCP23x17(Self&&) = delete;
         virtual void enableCS() noexcept = 0;
         virtual void disableCS() noexcept = 0;
         virtual void begin() noexcept {
@@ -143,12 +143,16 @@ class GenericMCP23S17 {
         constexpr bool interruptPinsAreActiveHigh() const noexcept { return !_polarityIsActiveLow; }
         constexpr bool hardwareAddressEnabled() const noexcept { return _hardwareAddressPinsEnabled; }
         constexpr bool hardwareAddressDisabled() const noexcept { return !_hardwareAddressPinsEnabled; }
+        void refreshIOCon() noexcept {
+            auto result = getIOCon();
+            _registersAreSequential = ((result & 0b1000'0000) == 0);
+            _polarityIsActiveLow = ((result & 0b0000'0010) == 0);
+            _hardwareAddressPinsEnabled = ((result & 0b0000'1000) != 0);
+        }
         byte getIOCon() noexcept { return read(getIOConAddress()); }
         void setIOCon(byte value) noexcept {
             write(getIOConAddress(), value);
-            _registersAreSequential = ((value & 0b1000'0000) == 0);
-            _polarityIsActiveLow = ((value & 0b0000'0010) == 0);
-            _hardwareAddressPinsEnabled = ((value & 0b0000'1000) != 0);
+            refreshIOCon();
         }
         void makeRegistersSequential() noexcept {
             if (!_registersAreSequential) {
@@ -274,9 +278,9 @@ class GenericMCP23S17 {
 };
 
 template<byte address, int chipEnable, int resetPin = -1>
-class MCP23S17 : public GenericMCP23S17<address, resetPin> {
+class MCP23S17 : public MCP23x17<address, resetPin> {
     public:
-        using Parent = GenericMCP23S17<address, resetPin>;
+        using Parent = MCP23x17<address, resetPin>;
         using Self = MCP23S17<address, chipEnable, resetPin>;
         Self& operator=(const Self&) = delete; 
         Self& operator=(Self&&) = delete; 
@@ -305,17 +309,17 @@ class MCP23S17 : public GenericMCP23S17<address, resetPin> {
 } // end namespace bonuspin
 
 template<byte address, int resetPin = -1>
-void digitalWrite(uint8_t pin, uint8_t value, bonuspin::GenericMCP23S17<address, resetPin>& mcp) noexcept {
+void digitalWrite(uint8_t pin, uint8_t value, bonuspin::MCP23x17<address, resetPin>& mcp) noexcept {
     mcp.digitalWrite(pin, value);
 }
 
 template<byte address, int resetPin = -1>
-auto digitalRead(uint8_t pin, bonuspin::GenericMCP23S17<address, resetPin>& mcp) noexcept {
+auto digitalRead(uint8_t pin, bonuspin::MCP23x17<address, resetPin>& mcp) noexcept {
     return mcp.digitalRead(pin);
 }
 
 template<byte address, int resetPin = -1>
-void pinMode(uint8_t pin, decltype(INPUT) kind, bonuspin::GenericMCP23S17<address, resetPin>& mcp) noexcept {
+void pinMode(uint8_t pin, decltype(INPUT) kind, bonuspin::MCP23x17<address, resetPin>& mcp) noexcept {
     mcp.pinMode(pin, kind);
 }
 
