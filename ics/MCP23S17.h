@@ -271,6 +271,9 @@ class MCP23x17 {
                 writeGPIOsDirection((~maskedValue) & dirmask);
             }
         }
+        void writePortB(uint8_t value) {
+            write(getGPIOBAddress(), value);
+        }
     private:
         bool _registersAreSequential = true;
         bool _polarityIsActiveLow = true;
