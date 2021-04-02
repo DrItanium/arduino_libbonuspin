@@ -26,14 +26,16 @@
 #include "Arduino.h"
 #include "../core/concepts.h"
 #include <SPI.h>
-
 namespace bonuspin 
 {
 template<byte address, int resetPin = -1>
 class MCP23x17 {
     public:
-        SPISettings spiSettings(10'000'000, MSBFIRST, SPI_MODE0);
-    static_assert((address & 0b111) == address, "Provided address is too large!");
+        static SPISettings& getSPISettings() noexcept {
+            static SPISettings theSettings(10000000, MSBFIRST, SPI_MODE0);
+            return theSettings;
+        }
+        static_assert((address & 0b111) == address, "Provided address is too large!");
     private:
         static constexpr auto generateByte(bool a, bool b, bool c, bool d, bool e, bool f, bool g, bool h) noexcept {
             byte output = 0;
@@ -91,7 +93,7 @@ class MCP23x17 {
         }
 
         byte read(byte registerAddress) noexcept {
-            SPI.beginTransaction(spiSettings);
+            SPI.beginTransaction(getSPISettings());
             enableCS();
             SPI.transfer(static_cast<uint8_t>(generateOpcode(ReadOperation{})));
             SPI.transfer(static_cast<uint8_t>(registerAddress));
@@ -101,7 +103,7 @@ class MCP23x17 {
             return result;
         }
         void write(byte registerAddress, byte value) noexcept {
-            SPI.beginTransaction(spiSettings);
+            SPI.beginTransaction(getSPISettings());
             enableCS();
             SPI.transfer(static_cast<uint8_t>(generateOpcode(WriteOperation{})));
             SPI.transfer(static_cast<uint8_t>(registerAddress));
