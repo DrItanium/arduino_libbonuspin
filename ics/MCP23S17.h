@@ -31,6 +31,8 @@ namespace bonuspin
 {
 template<byte address, int resetPin = -1>
 class MCP23x17 {
+    public:
+        SPISettings spiSettings(10'000'000, MSBFIRST, SPI_MODE0);
     static_assert((address & 0b111) == address, "Provided address is too large!");
     private:
         static constexpr auto generateByte(bool a, bool b, bool c, bool d, bool e, bool f, bool g, bool h) noexcept {
@@ -89,19 +91,23 @@ class MCP23x17 {
         }
 
         byte read(byte registerAddress) noexcept {
+            SPI.beginTransaction(spiSettings);
             enableCS();
             SPI.transfer(static_cast<uint8_t>(generateOpcode(ReadOperation{})));
             SPI.transfer(static_cast<uint8_t>(registerAddress));
             auto result = SPI.transfer(0x00);
             disableCS();
+            SPI.endTransaction();
             return result;
         }
         void write(byte registerAddress, byte value) noexcept {
+            SPI.beginTransaction(spiSettings);
             enableCS();
             SPI.transfer(static_cast<uint8_t>(generateOpcode(WriteOperation{})));
             SPI.transfer(static_cast<uint8_t>(registerAddress));
             SPI.transfer(static_cast<uint8_t>(value));
             disableCS();
+            SPI.endTransaction();
         }
         void write16(byte registerAddressA, byte registerAddressB, uint16_t value) noexcept {
             write(registerAddressA, static_cast<byte>(value & 0xFF));
